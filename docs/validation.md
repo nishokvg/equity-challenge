@@ -16,3 +16,15 @@ Checked September 12, 2026 PT.
 These are internal and integration checks, not an official Zindi score or a complete browser accessibility/visual audit. The recorded demo and team roster remain manual deliverables.
 
 A second live model run ranked the largest gaps and inspected the top tract. It initially supplied an invalid tract ID, received schema feedback, then corrected the call and completed the investigation. Rejected calls remain visible in the trace and do not enter the numerical findings.
+
+## Subsequent browser dry run (September 12, about 8:45–8:55 pm PT)
+
+Ollama was warmed and the browser explicitly selected Local model at localhost. The rural/urban comparison succeeded with model-selected `compare_groups`. A compound ranking-and-inspection request returned a ranking but omitted the requested inspection while reporting complete. The missing-reference prompt stopped without an analytical tool and surfaced an error. No rejected-call recovery occurred in this dry run; the earlier successful recovery is historical evidence, not a promised recording outcome. Architecture and methodology views rendered; six data checks passed. Export downloaded, but after the failed audit it contained selected-tract evidence only and incorrectly said no investigation had been run. The export wording has been corrected to identify the failed execution mode and error; task-completion evaluation remains an outstanding limitation. No narrated recording or upload was performed.
+
+## Demo day enhancements verified September 15 2026
+
+The completion verifier checks supported request requirements against successful tool results, including metric, group, ranking limit, and the inspected tract’s relationship to the ranking. Missing evidence gets one completion reminder and then a Partial result. Transport errors preserve prior evidence. The checker is a bounded intent matcher, not a general semantic verifier.
+
+The dated evaluation batch records 8/8 controlled adapter cases passing and 3/4 local request expectations met. Of the three requests that invoked Ollama, comparison and missing-reference investigation completed; ranking plus inspection remained partial after a rejected tract ID and one completion reminder. The fourth request was unsupported and correctly declined before inference. These results are recorded in data/agent-evaluations.json. A separate browser run reproduced the partial compound result with the correct missing tract identified.
+
+Twenty-four automated tests pass, including replay output recomputation and source/snapshot consistency. Type checking, lint, and production build pass. The browser verified presentation mode, replay labeling, model/required tool labels, partial score labels, the controlled recovery trace, and corrected architecture feedback paths. The replay is an actual dated local-model comparison, independently re-executed against the same snapshot before saving. No scoring formulas or raw source data changed.

@@ -11,6 +11,11 @@ import {
   metricLabels,
 } from './audit.ts';
 import { retrieve } from './knowledge.ts';
+import {
+  assessCompletion,
+  requestRequirements,
+  type Completion,
+} from './completion.ts';
 export type Trace = {
   tool: string;
   input: Record<string, unknown>;
@@ -21,7 +26,11 @@ export type Trace = {
 };
 export type AuditResult = {
   mode: 'guided' | 'model';
-  status: 'complete' | 'unsupported';
+  status: 'complete' | 'partial' | 'unsupported';
+  completion?: Completion;
+  recordedAt?: string;
+  completionRetries?: number;
+  stopReason?: string;
   question: string;
   summary: string[];
   trace: Trace[];
@@ -247,9 +256,16 @@ function finalize(
     summary.push(
       'Relevant methodology is listed below. Ask to rank coverage gaps, compare rural/urban or vulnerability groups, or inspect a tract.',
     );
+  const completion = assessCompletion(question, trace);
   return {
     mode,
-    status: 'complete',
+    status: !completion.supported
+      ? 'unsupported'
+      : completion.checks.every((c) => c.pass)
+        ? 'complete'
+        : 'partial',
+    completion,
+    recordedAt: new Date().toISOString(),
     question,
     summary,
     trace,
@@ -259,7 +275,6 @@ function finalize(
   };
 }
 export function guidedAudit(data: Dataset, question: string): AuditResult {
-  const q = question.toLowerCase();
   const trace: Trace[] = [];
   const call = (tool: string, input: Record<string, unknown>) => {
     const start = performance.now();
@@ -269,53 +284,57 @@ export function guidedAudit(data: Dataset, question: string): AuditResult {
       input,
       output,
       elapsedMs: Math.round(performance.now() - start),
+      automatic: tool === 'search_methodology' || tool === 'validate_dataset',
     });
     return output;
   };
-  const geoid = q.match(/\b\d{11}\b/)?.[0];
-  const supported =
-    /gap|coverage|mapping|rural|urban|vulnerab|svi|missing|reference|audit|tract|road|building|place|method|score/.test(
-      q,
-    );
-  if (!supported)
-    return {
-      mode: 'guided',
-      status: 'unsupported',
-      question,
-      summary: [
-        'This guided audit supports mapping gaps, rural/urban or vulnerability comparisons, missing-reference checks, and tract inspection. Choose a suggested investigation or ask about one of these.',
-      ],
-      trace: [],
-      citations: [],
-      selectedIds: [],
-    };
+  if (!requestRequirements(question).length)
+    return unsupported(question, 'guided');
   call('search_methodology', { query: question + ' coverage gap reference' });
   call('validate_dataset', {});
-  const metric: Component = /road/.test(q)
-    ? 'roads'
-    : /building/.test(q)
-      ? 'buildings'
-      : /place|poi|facilit/.test(q)
-        ? 'places'
-        : 'score';
-  if (geoid) call('inspect_tract', { geoid });
-  else if (/missing|undefined|zero reference/.test(q)) {
-    const t = data.tracts.find((t) => t.metrics.defined < 3);
-    if (t) call('inspect_tract', { geoid: t.geoid });
-  } else if (/compar|rural|urban|disparit/.test(q))
-    call('compare_groups', {
-      dimension: /svi|vulnerab/.test(q) ? 'svi' : 'rural',
-      metric,
-    });
-  else {
-    const out = call('rank_tracts', {
-      metric,
-      group: /vulnerab|svi/.test(q) ? 'high-svi' : 'all',
-      limit: 5,
-    }) as Ranked;
-    if (out.rows[0]) call('inspect_tract', { geoid: out.rows[0].geoid });
+  for (const requirement of requestRequirements(question)) {
+    if (requirement.target === 'top-ranked') {
+      const rank = trace.find((t) => t.tool === 'rank_tracts');
+      const top = (rank?.output as Ranked)?.rows[0];
+      if (top) call('inspect_tract', { geoid: top.geoid });
+    } else if (requirement.target === 'missing-reference') {
+      const tract = data.tracts.find((t) => t.metrics.defined < 3);
+      if (tract) call('inspect_tract', { geoid: tract.geoid });
+    } else if (requirement.tool !== 'search_methodology') {
+      try {
+        call(requirement.tool, requirement.args ?? {});
+      } catch (error) {
+        trace.push({
+          tool: requirement.tool,
+          input: requirement.args ?? {},
+          output: null,
+          elapsedMs: 0,
+          error: error instanceof Error ? error.message : 'Invalid tool call',
+        });
+      }
+    }
   }
   return finalize(data, question, 'guided', trace);
+}
+function unsupported(
+  question: string,
+  mode: 'guided' | 'model',
+  model?: string,
+): AuditResult {
+  return {
+    mode,
+    model,
+    status: 'unsupported',
+    question,
+    trace: [],
+    citations: [],
+    selectedIds: [],
+    recordedAt: new Date().toISOString(),
+    completion: assessCompletion(question, []),
+    summary: [
+      'This request is outside the checked analytical scope. Ask to rank up to 10 tracts, compare rural/urban or SVI groups, inspect an 11-digit tract ID, or explain missing references.',
+    ],
+  };
 }
 export type ModelConfig = { baseURL: string; model: string; apiKey?: string };
 /** OpenAI-compatible tool-calling endpoint, e.g. a local Ollama server. Never chosen by user input. */
@@ -325,7 +344,16 @@ export async function modelAudit(
   config: ModelConfig,
   fetcher: typeof fetch = fetch,
 ): Promise<AuditResult> {
+  if (!requestRequirements(question).length)
+    return unsupported(question, 'model', config.model);
   const trace: Trace[] = [];
+  let completionRetries = 0;
+  let stopReason: string | undefined;
+  const finish = () => ({
+    ...finalize(data, question, 'model', trace, config.model),
+    completionRetries,
+    ...(stopReason ? { status: 'partial' as const, stopReason } : {}),
+  });
   for (const [tool, input] of [
     ['search_methodology', { query: question + ' coverage gap reference' }],
     ['validate_dataset', {}],
@@ -365,117 +393,122 @@ export async function modelAudit(
         'Completed required preflight: ' +
         JSON.stringify(trace.map((t) => ({ tool: t.tool, result: t.output }))),
     },
+    {
+      role: 'system',
+      content:
+        'Evidence requirements for this supported request: ' +
+        JSON.stringify(requestRequirements(question)),
+    },
     { role: 'user', content: question },
   ];
-  let stopped = false;
   const deadline = Date.now() + 60000;
   for (let turn = 0; turn < 6 && trace.length < 8; turn++) {
     const remaining = deadline - Date.now();
-    if (remaining <= 0)
-      throw new Error(
-        'The model audit exceeded its time budget. Try the guided audit.',
-      );
-    const response = await fetcher(
-      config.baseURL.replace(/\/$/, '') + '/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(config.apiKey
-            ? { Authorization: `Bearer ${config.apiKey}` }
-            : {}),
-        },
-        body: JSON.stringify({
-          model: config.model,
-          messages,
-          tools,
-          tool_choice: 'auto',
-          temperature: 0,
-          max_tokens: 800,
-        }),
-        signal: AbortSignal.timeout(Math.min(20000, remaining)),
-      },
-    );
-    if (!response.ok)
-      throw new Error(`Model endpoint returned HTTP ${response.status}.`);
-    const body = (await response.json()) as {
-      choices?: { message?: ModelMessage }[];
-    };
-    const message = body.choices?.[0]?.message;
-    if (!message)
-      throw new Error('The model endpoint returned no assistant message.');
-    const calls = message.tool_calls ?? [];
-    if (!Array.isArray(calls)) throw new Error('Invalid tool-call response.');
-    if (!calls.length) {
-      stopped = true;
-      break;
+    if (remaining <= 0) {
+      stopReason = 'Investigation reached its 60-second time limit.';
+      return finish();
     }
-    if (calls.length + trace.length > 8)
-      throw new Error('The model exceeded the 8-tool budget.');
-    messages.push(message);
-    for (const c of calls) {
-      if (
-        c.type !== 'function' ||
-        typeof c.function?.arguments !== 'string' ||
-        c.function.arguments.length > 4000
-      )
-        throw new Error('Invalid model tool request.');
-      const definition = toolDefinitions.find(
-        (t) => t.name === c.function.name,
+    try {
+      const response = await fetcher(
+        config.baseURL.replace(/\/$/, '') + '/chat/completions',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(config.apiKey
+              ? { Authorization: `Bearer ${config.apiKey}` }
+              : {}),
+          },
+          body: JSON.stringify({
+            model: config.model,
+            messages,
+            tools,
+            tool_choice: 'auto',
+            temperature: 0,
+            max_tokens: 800,
+          }),
+          signal: AbortSignal.timeout(Math.min(20000, remaining)),
+        },
       );
-      if (!definition) throw new Error('Unknown tool requested by model.');
-      const start = performance.now();
-      let input: Record<string, unknown> = {};
-      let output: unknown;
-      let error: string | undefined;
-      try {
-        input = JSON.parse(c.function.arguments);
-        output = executeTool(data, c.function.name, input);
-      } catch (e) {
-        error = e instanceof Error ? e.message : 'Invalid arguments';
-        output = {
-          error,
-          validParameters: definition.properties,
-          instruction:
-            'Correct the parameters using only the schema values and retry.',
-        };
+      if (!response.ok)
+        throw new Error(`Model endpoint returned HTTP ${response.status}.`);
+      const body = (await response.json()) as {
+        choices?: { message?: ModelMessage }[];
+      };
+      const message = body.choices?.[0]?.message;
+      if (!message)
+        throw new Error('The model endpoint returned no assistant message.');
+      const calls = message.tool_calls ?? [];
+      if (!Array.isArray(calls)) throw new Error('Invalid tool-call response.');
+      if (!calls.length) {
+        const missing = assessCompletion(question, trace).checks.filter(
+          (c) => !c.pass,
+        );
+        if (!missing.length) return finish();
+        if (completionRetries < 1 && turn < 5 && trace.length < 8) {
+          completionRetries++;
+          messages.push(message);
+          messages.push({
+            role: 'user',
+            content:
+              'Completion check: evidence is still missing. Use the available tools to finish these requirements, then stop: ' +
+              JSON.stringify(missing),
+          });
+          continue;
+        }
+        stopReason =
+          'The model stopped before collecting all requested evidence.';
+        return finish();
       }
-      trace.push({
-        tool: c.function.name,
-        input,
-        output,
-        elapsedMs: Math.round(performance.now() - start),
-        ...(error ? { error } : {}),
-      });
-      messages.push({
-        role: 'tool',
-        tool_call_id: c.id,
-        content: JSON.stringify(output),
-      });
+      if (calls.length + trace.length > 8)
+        throw new Error('The model exceeded the 8-tool budget.');
+      messages.push(message);
+      for (const c of calls) {
+        if (
+          c.type !== 'function' ||
+          typeof c.function?.arguments !== 'string' ||
+          c.function.arguments.length > 4000
+        )
+          throw new Error('Invalid model tool request.');
+        const definition = toolDefinitions.find(
+          (t) => t.name === c.function.name,
+        );
+        if (!definition) throw new Error('Unknown tool requested by model.');
+        const start = performance.now();
+        let input: Record<string, unknown> = {};
+        let output: unknown;
+        let error: string | undefined;
+        try {
+          input = JSON.parse(c.function.arguments);
+          output = executeTool(data, c.function.name, input);
+        } catch (e) {
+          error = e instanceof Error ? e.message : 'Invalid arguments';
+          output = {
+            error,
+            validParameters: definition.properties,
+            instruction:
+              'Correct the parameters using only the schema values and retry.',
+          };
+        }
+        trace.push({
+          tool: c.function.name,
+          input,
+          output,
+          elapsedMs: Math.round(performance.now() - start),
+          ...(error ? { error } : {}),
+        });
+        messages.push({
+          role: 'tool',
+          tool_call_id: c.id,
+          content: JSON.stringify(output),
+        });
+      }
+    } catch (error) {
+      stopReason =
+        error instanceof Error ? error.message : 'Model request failed.';
+      return finish();
     }
   }
-  if (!stopped)
-    throw new Error(
-      'The model reached its turn or tool budget before finishing. Try a narrower question.',
-    );
-  if (!trace.some((t) => !t.automatic && !t.error))
-    throw new Error(
-      'The model did not run any tools. No evidence-backed answer was produced.',
-    );
-  if (
-    !trace.some((t) => t.tool === 'search_methodology' && !t.error) ||
-    !trace.some((t) => t.tool === 'validate_dataset' && !t.error)
-  )
-    throw new Error(
-      'The model skipped required retrieval or validation. Try the guided audit.',
-    );
-  if (
-    !trace.some(
-      (t) =>
-        !t.error &&
-        ['rank_tracts', 'inspect_tract', 'compare_groups'].includes(t.tool),
-    )
-  )
-    throw new Error('The model stopped before running an analytical tool.');
-  return finalize(data, question, 'model', trace, config.model);
+  stopReason = 'Investigation reached its turn or tool limit.';
+  return finish();
 }

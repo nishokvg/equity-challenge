@@ -1,48 +1,49 @@
-# Four-minute Gen Academy demo
+# Four-minute Gen Academy recording script
 
-## Before recording
+## Prepare once
 
-1. Run `npm ci` then `npm run dev` from the repository.
-2. If showing autonomous tool selection, run your installed Ollama model, configure `.dev.vars`, restart the app and select Local model. Complete one warm-up audit before recording. Guided mode is a reliable, clearly labeled fallback; do not describe it as an LLM run.
-3. Keep the browser at a comfortable desktop width. Start on Explore & audit.
-4. Add your actual team names and number to the handout. Record the screen and voice; upload the recording to Drive and verify the intended reviewers can access it.
+- Request full names, emails, point person and Academy team number first.
+- Open the actual submission form. It currently says May 2026 Cohort and asks for team number, names, one breakout document (max 10 MB), GitHub link and Drive recording link. Verify the cohort with the organizer; do not invent a team number.
+- Run `npm run dev`, warm the installed Ollama model, open localhost and select **Local model**. The hosted preview uses guided mode.
+- Budget 15 minutes for setup/dry run, 10 for one recording and playback, and 20 for upload and access verification. Do not repeat a take for polish.
+- Keep private team contact information out of the screen recording. The public source-sharing boundary remains unresolved; see README.
 
-## 0:00–0:30 — The problem
+## 0:00–0:30 — Problem and disclosure
 
-“Open maps support planning, but coverage can vary between communities. We built EquityMap to help an analyst investigate those differences and check the evidence before acting. This prototype uses real challenge data for 591 Northern California tracts.”
+“EquityMap helps a mapping analyst investigate uneven coverage and follow the evidence before acting. These are real observations from 591 Northern California tracts. The displayed scores are our independent regional baseline, not official Zindi scores. This covers one of four regions, and undefined components are excluded rather than filled with zero.”
 
-## 0:30–1:15 — Explore and ask
+## 0:30–1:30 — A live decision
 
-Point out the map and component tabs. Run “Compare rural and urban tracts.”
+Show localhost and the **Local model / llama3.1:8b** label. Run **Compare rural and urban tracts**. While it runs:
 
-“In this independent baseline, the rural mean composite gap is approximately 12.1%, versus 4.6% for urban tracts—a ratio around 2.64. These are unweighted tract averages using our documented RUCA threshold. This is an association to investigate, not proof of a cause or an official leaderboard result.”
+“Retrieval and validation are mandatory steps. The local model then chooses from approved read-only analytical tools. It cannot change source data or submit an entry.”
 
-If in Local model mode: “The locally running model chooses which approved analytical tools to call. Each call is recorded.” If guided: “This deterministic guided workflow demonstrates the same tools and validations. Autonomous selection is available through the local-model adapter.”
+Expand `compare_groups` after the result appears.
 
-## 1:15–2:00 — Evidence, not just an answer
+“The model selected the comparison tool. Code produced these numbers: about 12.1% for rural tracts and 4.6% for urban tracts, a ratio of 2.64. These are unweighted tract averages using our stated grouping threshold; they show an association to investigate.”
 
-Expand a tool trace. Show the retrieved methodology links. Run “Find the largest coverage gaps” and open the selected tract's observations.
+If this take fails, say what the error shows. Do not switch to guided mode while describing it as autonomous. Do not force or promise invalid-parameter recovery. If recovery occurs naturally, expand both rejected and corrected calls. An earlier saved trace must be explicitly introduced as an earlier run.
 
-“Numbers come from code, not generated text. We can trace a result back to the source counts and the formula. A high gap is a candidate for mapping review; it does not prove a service is physically absent.”
+## 1:30–2:15 — Evidence and missing data
 
-## 2:00–2:45 — Catch a bad interpretation
+Select tract **06061021043**, and expand **View observations and calculation**. Keep the successful comparison available; inspect this through the UI rather than launching another model request.
 
-Run “Explain missing reference data.” Show the undefined road component and the denominator warning.
+“This tract has no named-road reference, so its road gap is undefined. The composite averages only two defined components. An apparent mapping gap does not prove that a physical service is absent. Across this snapshot, 218 tracts have an undefined road component.”
 
-“218 tracts here have no named-highway reference. Calling those zero-gap tracts would mislead us. The engine marks that component undefined and averages only the components it can actually measure.”
+## 2:15–3:15 — Architecture and evaluations
 
-## 2:45–3:30 — Architecture and evaluation
+Open **Architecture**, then **Methodology & checks**.
 
-Open Architecture, then Methodology & checks.
+“The offline data process produces a versioned snapshot. Curated lexical retrieval supplies source-linked definitions. The bounded model selects tools; tool results supply the findings. We check identifiers, bounds, references and numerical consistency. These six checks passing establish internal consistency, not official accuracy or reliable completion of every user instruction.”
 
-“The data pipeline runs offline in Python and DuckDB. Retrieval provides definitions. The agent calls bounded, read-only tools. TypeScript independently recomputes the snapshot's scores, while validation checks membership and missing-data handling. A human reviews the report before taking action.”
+“During the dry run, the model skipped a requested follow-up inspection and another prompt stopped without an analytical tool. That exposed a gap in our task-completion evaluation. Our next evaluation needs to measure whether every requested step was actually performed.”
 
-## 3:30–4:00 — Output and next step
+## 3:15–4:00 — Output and human review
 
-Click Export audit. Explain that the Markdown report contains findings, trace, limitations and provenance. Show the regional CSV button if useful.
+Click **Export audit** after a successful run and open the downloaded report. If the live run failed, describe the export as selected-tract evidence, not a successful agent report.
 
-“We have a working regional prototype. Next we would cover all challenge regions, evaluate leaderboard accuracy, and investigate disparities beyond the predefined comparisons. Nothing is automatically submitted or published.”
+“The report preserves evidence, sources and limitations for human review. The source repository and this recording are the deliverables; the hosted preview is only a convenience. Next we will strengthen task-completion checks and expand regional coverage. Nothing is automatically submitted to the competition.”
 
-## Submission checklist
+## After the one take
 
-The provided form asks for the team number, member names, uploaded breakout document, GitHub project link, and a Drive recording link. One team member submits. The form's title says May 2026; confirm it is the intended form for the stated September 12 deadline. Team details and recording are still manual steps. Check Zindi's four-person team and code-sharing rules before reusing the code across groups.
+Play the recording once to confirm picture and narration. Upload it to Drive, set General access to **Anyone with the link — Viewer**, and check the exact link while signed out. Do not submit the form until the roster, cohort/form confirmation, source-sharing boundary and recording link are resolved. Only one team member submits.

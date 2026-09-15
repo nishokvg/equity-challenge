@@ -1220,3 +1220,323 @@ summary {
     font-size: 24px;
   }
 }
+
+/* Shared presentation and evidence surfaces retain the research workspace palette. */
+.demo-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.demo-mode {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+.demo-mode strong {
+  color: var(--blue);
+  font-size: 16px;
+}
+.demo-mode span {
+  color: var(--quiet);
+}
+.demo-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.demo-actions a {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--blue);
+  padding: 8px;
+}
+.availability {
+  display: block !important;
+  font-size: 14px !important;
+  line-height: 1.5;
+  color: #735011 !important;
+  max-width: 220px;
+}
+.component-grid strong {
+  overflow-wrap: anywhere;
+}
+.completion-checks {
+  border-block: 1px solid var(--border);
+  padding: 16px 0;
+  margin-bottom: 16px;
+}
+.completion-checks h3,
+.trace h3,
+.citations h3 {
+  font-size: 16px;
+  font-weight: 650;
+  margin: 0 0 12px;
+}
+.completion-checks ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.completion-checks li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.completion-checks li svg {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.completion-checks small {
+  display: block;
+  font-size: 14px;
+}
+.check-pass {
+  color: #22694f;
+}
+.check-missing {
+  color: #80520c;
+}
+.completion-checks p,
+.completion-checks details {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 12px;
+  color: var(--quiet);
+}
+.trace summary {
+  flex-wrap: wrap;
+  font-size: 14px;
+  gap: 8px;
+  padding: 10px 0;
+}
+.trace summary code {
+  font-size: 14px;
+}
+.trace .trace-origin {
+  font-size: 12px !important;
+  margin-left: auto;
+  color: #3f5979 !important;
+}
+.trace-number {
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.trace-detail {
+  padding: 0 0 12px 32px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.trace-detail p {
+  margin: 0 0 8px;
+}
+.trace-detail p > span {
+  display: block;
+  color: var(--quiet);
+  font-size: 12px;
+}
+.trace-input {
+  display: block;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #f3f6fa;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 13px;
+}
+.trace-rejected {
+  border-left: 3px solid #bd7930;
+  padding-left: 8px;
+}
+.recovery-pair {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+  margin: 12px 0;
+  color: #80520c;
+}
+.recovery-pair code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.trace pre {
+  font-size: 13px;
+}
+.trace-detail details {
+  border: 0;
+}
+.run-provenance {
+  font-size: 14px !important;
+  color: var(--quiet);
+  overflow-wrap: anywhere;
+}
+.result-heading {
+  font-size: 14px;
+  flex-wrap: wrap;
+}
+.result-badge,
+.warning-badge {
+  font-size: 14px;
+}
+.architecture-feedback {
+  padding: 18px 0;
+  border-block: 1px solid var(--border);
+  margin-bottom: 22px;
+  font-size: 16px;
+  line-height: 1.7;
+}
+.architecture-feedback p {
+  margin: 8px 0;
+}
+.evaluation-panel {
+  padding: 28px 0;
+}
+.evaluation-panel h2 {
+  font-size: 28px;
+}
+.evaluation-panel h3 {
+  font-size: 20px;
+  margin: 24px 0 12px;
+}
+.evaluation-panel p {
+  font-size: 16px;
+  color: var(--quiet);
+  line-height: 1.7;
+  margin: 12px 0;
+  max-width: 1000px;
+}
+.eval-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  padding: 20px 0;
+}
+.eval-totals > div {
+  display: grid;
+  gap: 5px;
+}
+.eval-totals strong {
+  font-size: 36px;
+  color: var(--blue);
+}
+.eval-totals span {
+  font-size: 14px;
+}
+.evaluation-panel td,
+.evaluation-panel th {
+  padding: 16px;
+  white-space: normal;
+  font-size: 14px;
+  line-height: 1.6;
+  min-width: 100px;
+  vertical-align: top;
+}
+.evaluation-panel th {
+  background: #eaf0fa;
+}
+.evaluation-panel td:nth-child(2),
+.evaluation-panel td:nth-child(3) {
+  min-width: 240px;
+}
+.eval-provenance {
+  margin: 24px 0;
+  font-size: 14px;
+}
+.eval-provenance code {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.view-tabs {
+  flex-wrap: wrap !important;
+  height: auto !important;
+}
+.presentation {
+  max-width: 1600px;
+}
+.presentation .intro,
+.presentation .stats,
+.presentation .tract-table,
+.presentation .agent-intro,
+.presentation .agent-empty {
+  display: none;
+}
+.presentation .audit-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.presentation .agent-panel {
+  grid-row: 1;
+  min-width: 0;
+}
+.presentation .agent-body {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.5fr);
+  gap: 28px;
+  align-items: start;
+}
+.presentation .agent-footer {
+  grid-column: 1/-1;
+}
+.presentation .audit-result {
+  margin: 0;
+  border-top: 0;
+  border-left: 1px solid var(--border);
+  padding: 0 0 0 28px;
+  min-width: 0;
+}
+.presentation .question-input {
+  font-size: 20px !important;
+  min-height: 150px !important;
+}
+.presentation .input-label,
+.presentation .suggestions button,
+.presentation .agent-title h2,
+.presentation .audit-result > p {
+  font-size: 18px;
+}
+.presentation .agent-title h2 {
+  font-size: 22px;
+}
+.presentation .completion-checks li,
+.presentation .trace summary code,
+.presentation .trace-detail,
+.presentation .citations a {
+  font-size: 16px;
+}
+.presentation .run-button {
+  height: 48px !important;
+  font-size: 18px;
+}
+.presentation .map-panel {
+  max-height: 600px;
+  overflow: auto;
+}
+.presentation .selected-score strong {
+  font-size: 36px;
+}
+@media (max-width: 850px) {
+  .presentation .agent-body {
+    grid-template-columns: 1fr;
+  }
+  .presentation .audit-result {
+    border-left: 0;
+    border-top: 1px solid var(--border);
+    padding: 20px 0 0;
+  }
+  .demo-actions {
+    width: 100%;
+  }
+  .demo-mode span {
+    font-size: 14px;
+  }
+}

@@ -13,6 +13,14 @@ A working mapping-equity audit prototype for Gen Academy and the Zindi Bias Boun
 
 This is an independent baseline, not an organizer reference score or a complete competition entry. No leaderboard RMSE has been measured. Group thresholds and feature assignment choices are documented in [methodology](docs/methodology.md).
 
+## Demo disclosure and submission artifacts
+
+The app uses real, precomputed challenge observations for 591 Northern California tracts. The component scores are an independent baseline, not fabricated sample values or organizer reference scores. Scope is partial: one of four regions, with undefined components excluded and no official leaderboard RMSE. Test fixtures and mocked model responses are synthetic and are not the live demo data.
+
+Use the GitHub source and a narrated recording as the Academy deliverables. The hosted preview is a convenience and runs guided mode; record localhost with **Local model** selected to demonstrate autonomous tool selection.
+
+**Sharing boundary is unresolved:** the initial public commit includes the scoring pipeline and score recomputation. This repository has not yet been separated into an Academy-only application. Deleting those files in a later commit would not remove them from history. Zindi limits teams to four and requires shared competition code to be available to all participants through its platform. Do not assume a seven-person Academy group is an authorized competition team. No competition submission has been made.
+
 ## Run the demo
 
 Requires Node 22.13+ and npm. The committed snapshot means Python and raw downloads are **not** needed to run the UI.
@@ -93,3 +101,11 @@ data/northern-ca.json   Reproducible application snapshot
 Before sharing competition code, follow Zindi's team size and code-sharing rules and confirm Gen Academy's reuse policy. This repository does not submit to either organization.
 
 The orchestrator always runs methodology retrieval and validation before model selection. These calls are labeled required in the trace; the model then chooses analytical and follow-up tools. This keeps mandatory checks reliable even if a model omits them.
+
+## Demo day controls and evidence checks
+
+Use **Presentation view** for a larger question and side-by-side evidence on wide screens. Select **Local model** explicitly for live Ollama tool selection. **Reset demo** clears the result, replay, question and map filters while preserving the chosen execution mode. **Load recorded replay** displays a dated, verified local-model result without calling a model; the header, result and exported report label it as a replay. The recorded video remains linked alongside it.
+
+The application recognizes a bounded set of supported requests: ranking up to ten tracts by one metric, rural/urban or SVI comparison, explicit tract inspection, missing-reference inspection, and methodology retrieval. Deterministic requirements check the tool, metric, group, rank limit and target tract. This is a conservative intent matcher, not a general natural-language completeness judge. Requests outside this scope are declined. A model that stops early gets one completion reminder within the original six-turn, eight-tool, 60-second budget. Missing evidence or model errors yield **Partial**, preserving collected evidence. Numeric formulas are unchanged.
+
+**Agent evaluations** separates scripted adapter tests from actual local requests, with expected and observed behavior and dated results. The scripted recovery demonstration intentionally supplies a bad enum; it is not a live model claim. `npm run eval:live` warms local Ollama, runs the controlled cases and four local requests, and saves a verified successful replay. `npm run eval` runs controlled cases only and replaces the live batch with an empty batch; use `eval:live` for the complete demo artifacts. Neither command computes an official competition score. Snapshot and evaluator hashes, replay output recomputation, and automated tests guard against stale evidence.

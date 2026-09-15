@@ -13,7 +13,9 @@
     "format": "oxfmt",
     "typecheck": "tsc --noEmit --incremental false",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
-    "data:build": ".venv/bin/python scripts/build_snapshot.py"
+    "data:build": ".venv/bin/python scripts/build_snapshot.py",
+    "eval": "node --experimental-strip-types scripts/demo-eval.ts",
+    "eval:live": "node --experimental-strip-types scripts/demo-eval.ts --live"
   },
   "dependencies": {
     "react": "19.3.0",

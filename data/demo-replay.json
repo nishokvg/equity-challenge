@@ -1,0 +1,163 @@
+{
+  "label": "Recorded local model run",
+  "recordedAt": "2026-09-15T19:20:27.006Z",
+  "model": "llama3.1:8b",
+  "snapshotHash": "1156628701976232d06af1b10c62e6025710f51c27dfbe4ca0706de9325908c6",
+  "sourceHash": "67a485c1419df70ae402f4e077fa998eff6cf8c46350d04e34d700be6daab20d",
+  "verification": "Every successful tool output was independently re-executed against this snapshot and matched.",
+  "result": {
+    "mode": "model",
+    "status": "complete",
+    "completion": {
+      "supported": true,
+      "scope": "Checks cover ranking, rural/urban or SVI comparisons, explicit tract inspection, missing references, and methodology. They do not establish causal explanations.",
+      "checks": [
+        {
+          "id": "compare-rural",
+          "label": "Compare rural and urban groups using score",
+          "pass": true,
+          "detail": "Supported by a successful tool result."
+        }
+      ]
+    },
+    "recordedAt": "2026-09-15T19:20:27.006Z",
+    "question": "Compare rural and urban tracts",
+    "summary": [
+      "6/6 validation checks pass. 218 tracts have no named-highway reference.",
+      "Rural: 12.1% mean gap (156 defined tracts). Urban: 4.6% (435 defined tracts). Ratio: 2.64×. 0 tracts have unknown group membership."
+    ],
+    "trace": [
+      {
+        "tool": "search_methodology",
+        "input": {
+          "query": "Compare rural and urban tracts coverage gap reference"
+        },
+        "output": [
+          {
+            "id": "scoring",
+            "title": "Coverage gap and undefined references",
+            "url": "https://source.coop/humane-intelligence/bias-bounty-mapping-equity-challenge",
+            "text": "For a defined reference, gap = 1 − min(1, Overture/reference). Zero reference makes a component undefined. Average only defined components for the composite. A missing denominator does not mean complete mapping. Hospitals are excluded from scored facilities.",
+            "relevance": 4
+          },
+          {
+            "id": "provenance",
+            "title": "Release, provenance, and source limits",
+            "url": "https://zindi.world/competitions/bias-bounty-mapping-equity-challenge/data",
+            "text": "The dataset is pinned to Overture release 2026-08-19.0. GEOID must remain text to retain leading zeros. Inputs use OGC:CRS84 longitude-latitude coordinates. Reference sources can contain errors and different vintages; apparent coverage gaps warrant review and do not prove that physical services are absent.",
+            "relevance": 4
+          },
+          {
+            "id": "roads",
+            "title": "Named-highway comparison",
+            "url": "https://zindi.world/competitions/bias-bounty-mapping-equity-challenge",
+            "text": "Compare TIGER S1100 and S1200 with Overture motorway, trunk, primary and secondary roads. The two sources use different class boundaries. Road gaps should not be compared across regions. This baseline clips road segments to tract boundaries before measuring length.",
+            "relevance": 3
+          }
+        ],
+        "elapsedMs": 0,
+        "automatic": true
+      },
+      {
+        "tool": "validate_dataset",
+        "input": {},
+        "output": {
+          "checks": [
+            {
+              "name": "Tract identity",
+              "pass": true,
+              "detail": "591 unique 11-digit text IDs expected."
+            },
+            {
+              "name": "Submission membership",
+              "pass": true,
+              "detail": "Every authoritative regional sample ID is present exactly once."
+            },
+            {
+              "name": "Valid observations",
+              "pass": true,
+              "detail": "Counts and road lengths are finite and non-negative."
+            },
+            {
+              "name": "Score bounds",
+              "pass": true,
+              "detail": "Defined gaps are between 0 and 1; every scored tract has a composite."
+            },
+            {
+              "name": "Independent recomputation",
+              "pass": true,
+              "detail": "Browser/TypeScript calculations match the Python snapshot within 1e-9."
+            },
+            {
+              "name": "Missing reference handling",
+              "pass": true,
+              "detail": "Missing references remain undefined and are excluded from the composite."
+            }
+          ],
+          "missingRoadReference": 218,
+          "examples": [
+            "06007000104",
+            "06007000403",
+            "06007000404"
+          ]
+        },
+        "elapsedMs": 3,
+        "automatic": true
+      },
+      {
+        "tool": "compare_groups",
+        "input": {
+          "dimension": "rural",
+          "metric": "score"
+        },
+        "output": {
+          "metric": "score",
+          "left": {
+            "group": "rural",
+            "label": "Rural",
+            "n": 156,
+            "defined": 156,
+            "mean": 0.12087092740790549
+          },
+          "right": {
+            "group": "urban",
+            "label": "Urban",
+            "n": 435,
+            "defined": 435,
+            "mean": 0.04570366247376787
+          },
+          "ratio": 2.6446661135150977,
+          "unknown": 0,
+          "smallGroup": false
+        },
+        "elapsedMs": 1
+      }
+    ],
+    "citations": [
+      {
+        "id": "scoring",
+        "title": "Coverage gap and undefined references",
+        "url": "https://source.coop/humane-intelligence/bias-bounty-mapping-equity-challenge",
+        "text": "For a defined reference, gap = 1 − min(1, Overture/reference). Zero reference makes a component undefined. Average only defined components for the composite. A missing denominator does not mean complete mapping. Hospitals are excluded from scored facilities.",
+        "relevance": 4
+      },
+      {
+        "id": "provenance",
+        "title": "Release, provenance, and source limits",
+        "url": "https://zindi.world/competitions/bias-bounty-mapping-equity-challenge/data",
+        "text": "The dataset is pinned to Overture release 2026-08-19.0. GEOID must remain text to retain leading zeros. Inputs use OGC:CRS84 longitude-latitude coordinates. Reference sources can contain errors and different vintages; apparent coverage gaps warrant review and do not prove that physical services are absent.",
+        "relevance": 4
+      },
+      {
+        "id": "roads",
+        "title": "Named-highway comparison",
+        "url": "https://zindi.world/competitions/bias-bounty-mapping-equity-challenge",
+        "text": "Compare TIGER S1100 and S1200 with Overture motorway, trunk, primary and secondary roads. The two sources use different class boundaries. Road gaps should not be compared across regions. This baseline clips road segments to tract boundaries before measuring length.",
+        "relevance": 3
+      }
+    ],
+    "selectedIds": [],
+    "model": "llama3.1:8b",
+    "completionRetries": 0
+  }
+}

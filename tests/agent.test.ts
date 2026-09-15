@@ -117,30 +117,30 @@ void test('model cannot request an arbitrary tool', async () => {
         },
       ],
     });
-  await assert.rejects(
-    modelAudit(
-      data,
-      'Email the results',
-      { baseURL: 'http://local.test/v1', model: 'test' },
-      fetcher,
-    ),
-    /Unknown tool/,
+  const r = await modelAudit(
+    data,
+    'Rank gaps',
+    { baseURL: 'http://local.test/v1', model: 'test' },
+    fetcher,
   );
+  assert.equal(r.status, 'partial');
+  assert.match(r.stopReason!, /Unknown tool/);
+  assert.ok(!r.trace.some((t) => t.tool === 'send_email'));
 });
 void test('model refusal or skipped evidence is not disguised as successful autonomy', async () => {
   const fetcher: typeof fetch = async () =>
     Response.json({
       choices: [{ message: { role: 'assistant', content: 'Trust me.' } }],
     });
-  await assert.rejects(
-    modelAudit(
-      data,
-      'Rank gaps',
-      { baseURL: 'http://local.test/v1', model: 'test' },
-      fetcher,
-    ),
-    /did not run any tools/,
+  const r = await modelAudit(
+    data,
+    'Rank gaps',
+    { baseURL: 'http://local.test/v1', model: 'test' },
+    fetcher,
   );
+  assert.equal(r.status, 'partial');
+  assert.ok(r.completion?.checks.every((c) => !c.pass));
+  assert.ok(!r.trace.some((t) => !t.automatic));
 });
 void test('model corrects a rejected parameter without turning its failed call into a finding', async () => {
   let turn = 0;

@@ -57,6 +57,9 @@ import {
   compareGroups,
 } from '@/lib/audit';
 import { type AuditResult } from '@/lib/agent';
+import { AuditResults } from '@/components/audit-results';
+import { EvaluationPanel } from '@/components/evaluation-panel';
+import replayData from '@/data/demo-replay.json';
 import { documents } from '@/lib/knowledge';
 import { flushSync } from 'react-dom';
 import { registerAuditTools, type ModelContext } from '@/lib/webmcp';
@@ -68,7 +71,7 @@ const color = (value: number | null) =>
 const count = (n: number) =>
   new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(n);
 const suggestions = [
-  'Find the largest coverage gaps',
+  'Rank the highest gaps and inspect the top tract',
   'Compare rural and urban tracts',
   'Explain missing reference data',
 ];
@@ -81,6 +84,8 @@ function download(name: string, text: string, type = 'text/markdown') {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 export default function Workspace({ data }: { data: Dataset }) {
+  const [presentation, setPresentation] = useState(false);
+  const [replay, setReplay] = useState(false);
   const [view, setView] = useState('explore');
   const [metric, setMetric] = useState<Component>('score');
   const [group, setGroup] = useState<Group>('all');
@@ -134,6 +139,7 @@ export default function Workspace({ data }: { data: Dataset }) {
     async (text: string) => {
       if (!text.trim() || busy) return null;
       setBusy(true);
+      setReplay(false);
       setError('');
       setAudit(null);
       setQuestion(text);
@@ -189,11 +195,19 @@ export default function Workspace({ data }: { data: Dataset }) {
       '',
       `Scope: ${data.tracts.length} Northern California tracts. Independent baseline; no leaderboard RMSE measured.`,
       '',
-      `Mode: ${audit?.mode ?? 'exploration only'}`,
+      `Mode: ${audit?.mode ?? (error ? `${mode} (failed)` : 'exploration only')}`,
       '',
       ...(audit
         ? [
             `Question: ${audit.question}`,
+            `Status: ${audit.status}`,
+            `Evidence source: ${replay ? 'Recorded replay — not a live run' : 'Current investigation'}`,
+            `Model: ${audit.model ?? 'No model'}`,
+            `Recorded at: ${audit.recordedAt ?? 'Unavailable'}`,
+            ...(audit.stopReason ? [`Stop reason: ${audit.stopReason}`] : []),
+            ...(audit.completion?.checks.map(
+              (c) => `${c.pass ? 'DONE' : 'MISSING'}: ${c.label}`,
+            ) ?? []),
             '',
             ...audit.summary.map((s) => '- ' + s),
             '',
@@ -204,12 +218,14 @@ export default function Workspace({ data }: { data: Dataset }) {
             ),
           ]
         : [
-            'No agent investigation has been run. This report records the selected tract.',
+            error
+              ? `Investigation failed: ${error}. This report records selected-tract evidence only, not a successful agent audit.`
+              : 'No agent investigation has been run. This report records the selected tract.',
           ]),
       '',
       '## Selected tract',
       `${selectedTract.geoid} — ${selectedTract.name}`,
-      `Composite gap: ${pct(selectedTract.metrics.score)}`,
+      `Composite gap: ${pct(selectedTract.metrics.score)}; ${selectedTract.metrics.defined} of 3 components available`,
       `Observed/reference counts: ${JSON.stringify(selectedTract.counts)}`,
       '',
       '## Validation',
@@ -230,8 +246,34 @@ export default function Workspace({ data }: { data: Dataset }) {
     ];
     download('equitymap-audit.md', lines.join('\n'));
   };
+  const resetDemo = () => {
+    setAudit(null);
+    setError('');
+    setReplay(false);
+    setView('explore');
+    setQuestion('Compare rural and urban tracts');
+    setQuery('');
+    setPage(0);
+    setMetric('score');
+    setGroup('all');
+    setSelected(
+      data.tracts
+        .slice()
+        .sort((a, b) => (b.metrics.score ?? 0) - (a.metrics.score ?? 0))[0]
+        .geoid,
+    );
+  };
+  const loadReplay = () => {
+    const result = replayData.result as AuditResult;
+    setAudit(result);
+    setReplay(true);
+    setError('');
+    setQuestion(result.question);
+    setView('explore');
+    if (result.selectedIds[0]) setSelected(result.selectedIds[0]);
+  };
   return (
-    <main className="workspace">
+    <main className={`workspace${presentation ? ' presentation' : ''}`}>
       <header className="masthead">
         <Link className="brand" href="/">
           <Layers3 size={25} /> equitymap<span>RESEARCH WORKSPACE</span>
@@ -249,6 +291,52 @@ export default function Workspace({ data }: { data: Dataset }) {
           </span>
         </div>
       </header>
+      <div className="demo-toolbar" aria-label="Presentation controls">
+        <div className="demo-mode">
+          <strong>
+            {replay
+              ? 'Recorded replay'
+              : mode === 'model'
+                ? 'Local model'
+                : 'Guided mode'}
+          </strong>
+          <span>
+            {replay
+              ? replayData.model
+              : mode === 'model'
+                ? (model ?? 'Unavailable')
+                : 'No LLM'}{' '}
+            · Real data · 591 tracts
+          </span>
+        </div>
+        <div className="demo-actions">
+          <Button
+            variant="outline"
+            aria-pressed={presentation}
+            onClick={() => setPresentation(!presentation)}
+          >
+            {presentation ? 'Exit presentation' : 'Presentation view'}
+          </Button>
+          <Button variant="outline" disabled={busy} onClick={loadReplay}>
+            Load recorded replay
+          </Button>
+          <Button variant="outline" disabled={busy} onClick={resetDemo}>
+            Reset demo
+          </Button>
+          {presentation && (
+            <Button variant="outline" onClick={exportReport}>
+              Export audit
+            </Button>
+          )}
+          <a
+            href="https://drive.google.com/file/d/16QnFW2gI44o2K6PIUqtToMDsGAymEzKK/view"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Recorded video <ArrowUpRight size={14} />
+          </a>
+        </div>
+      </div>
       <section className="intro">
         <div>
           <p className="eyebrow">MAPPING EQUITY / NORTHERN CALIFORNIA</p>
@@ -277,6 +365,9 @@ export default function Workspace({ data }: { data: Dataset }) {
           </TabsTrigger>
           <TabsTrigger value="architecture">
             <GitBranch /> Architecture
+          </TabsTrigger>
+          <TabsTrigger value="evaluations">
+            <ShieldCheck /> Agent evaluations
           </TabsTrigger>
           <TabsTrigger value="methodology">
             <BookOpen /> Methodology & checks
@@ -477,6 +568,9 @@ export default function Workspace({ data }: { data: Dataset }) {
                   <div className="selected-score">
                     <strong>{pct(selectedTract.metrics.score)}</strong>
                     <span>composite gap</span>
+                    <span className="availability">
+                      {selectedTract.metrics.defined} of 3 components available
+                    </span>
                   </div>
                 </div>
                 <div className="component-grid">
@@ -486,7 +580,11 @@ export default function Workspace({ data }: { data: Dataset }) {
                       <div key={key}>
                         <Icon size={18} />
                         <span>{metricLabels[key]}</span>
-                        <strong>{pct(selectedTract.metrics[key])}</strong>
+                        <strong>
+                          {selectedTract.metrics[key] === null
+                            ? 'Unknown reference'
+                            : pct(selectedTract.metrics[key])}
+                        </strong>
                       </div>
                     );
                   })}
@@ -545,165 +643,99 @@ export default function Workspace({ data }: { data: Dataset }) {
                   <div>
                     <h2>Investigate with evidence</h2>
                     <span className="small-muted">
-                      {mode === 'guided'
-                        ? 'Guided tools · no LLM'
-                        : `Model tool selection · ${model}`}
+                      {replay
+                        ? `Recorded local model · ${replayData.model}`
+                        : mode === 'guided'
+                          ? 'Guided tools · no LLM'
+                          : `Model tool selection · ${model}`}
                     </span>
                   </div>
                 </div>
               </div>
               <div className="agent-body">
-                <p className="agent-intro">
-                  Ask about coverage gaps, compare communities, or inspect a
-                  tract. Every result has a trace.
-                </p>
-                {model && (
-                  <Select
-                    value={mode}
-                    onValueChange={(v) => {
-                      if (v) setMode(v as 'guided' | 'model');
+                <div className="investigation-controls">
+                  <p className="agent-intro">
+                    Ask about coverage gaps, compare communities, or inspect a
+                    tract. Every result has a trace.
+                  </p>
+                  {model && (
+                    <Select
+                      disabled={busy}
+                      value={mode}
+                      onValueChange={(v) => {
+                        if (v) setMode(v as 'guided' | 'model');
+                      }}
+                    >
+                      <SelectTrigger aria-label="Audit execution mode">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="guided">Guided audit</SelectItem>
+                        <SelectItem value="model">Local model</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void runAudit(question);
                     }}
                   >
-                    <SelectTrigger aria-label="Audit execution mode">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="guided">Guided audit</SelectItem>
-                      <SelectItem value="model">Local model</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void runAudit(question);
-                  }}
-                >
-                  <label htmlFor="question" className="input-label">
-                    Your investigation
-                  </label>
-                  <Textarea
-                    id="question"
-                    value={question}
-                    onChange={(e) => setQuestion(e.target.value)}
-                    maxLength={800}
-                    rows={3}
-                    className="question-input"
-                  />
-                  <Button
-                    type="submit"
-                    disabled={busy || !question.trim()}
-                    className="run-button"
-                  >
-                    {busy ? <LoaderCircle className="spin" /> : <Play />}
-                    {busy ? 'Running investigation…' : 'Run audit'}
-                    {!busy && <ArrowRight />}
-                  </Button>
-                </form>
-                <div className="suggestions">
-                  {suggestions.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => void runAudit(s)}
-                      disabled={busy}
+                    <label htmlFor="question" className="input-label">
+                      Your investigation
+                    </label>
+                    <Textarea
+                      id="question"
+                      value={question}
+                      onChange={(e) => setQuestion(e.target.value)}
+                      maxLength={800}
+                      rows={3}
+                      className="question-input"
+                    />
+                    <Button
+                      type="submit"
+                      disabled={busy || !question.trim()}
+                      className="run-button"
                     >
-                      {s}
-                      <ArrowUpRight size={14} />
-                    </button>
-                  ))}
-                </div>
-                {error && (
-                  <p className="error-box" role="alert">
-                    {error}
-                  </p>
-                )}
-                {!audit && !busy && !error && (
-                  <div className="agent-empty">
-                    <FileCheck2 size={26} />
-                    <h3>Your evidence trail starts here.</h3>
-                    <p>
-                      Run an investigation to see findings, sources, and each
-                      tool’s inputs and outputs.
-                    </p>
-                  </div>
-                )}
-                {busy && (
-                  <output className="small-muted">
-                    Querying the loaded snapshot and checking evidence…
-                  </output>
-                )}
-                {audit && (
-                  <div className="audit-result" aria-live="polite">
-                    <div className="result-heading">
-                      <span
-                        className={
-                          audit.status === 'complete'
-                            ? 'result-badge'
-                            : 'warning-badge'
-                        }
+                      {busy ? <LoaderCircle className="spin" /> : <Play />}
+                      {busy ? 'Running investigation…' : 'Run audit'}
+                      {!busy && <ArrowRight />}
+                    </Button>
+                  </form>
+                  <div className="suggestions">
+                    {suggestions.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => void runAudit(s)}
+                        disabled={busy}
                       >
-                        {audit.status === 'complete' ? (
-                          <Check size={13} />
-                        ) : (
-                          <AlertTriangle size={13} />
-                        )}{' '}
-                        {audit.status === 'complete'
-                          ? 'Audit complete'
-                          : 'Question outside scope'}
-                      </span>
-                      <span>{audit.trace.length} tool calls</span>
-                    </div>
-                    {audit.summary.map((s, i) => (
-                      <p key={i}>{s}</p>
+                        {s}
+                        <ArrowUpRight size={14} />
+                      </button>
                     ))}
-                    {audit.trace.length > 0 && (
-                      <div className="trace">
-                        <p className="eyebrow">TOOL TRACE</p>
-                        {audit.trace.map((t, i) => (
-                          <details key={i}>
-                            <summary>
-                              <span className="trace-number">{i + 1}</span>
-                              <code>
-                                {t.tool}
-                                {t.error
-                                  ? ' · rejected'
-                                  : t.automatic
-                                    ? ' · required'
-                                    : ''}
-                              </code>
-                              <span>{t.elapsedMs} ms</span>
-                              <ChevronRight size={14} />
-                            </summary>
-                            <pre>
-                              {JSON.stringify(
-                                { input: t.input, output: t.output },
-                                null,
-                                2,
-                              )}
-                            </pre>
-                          </details>
-                        ))}
-                      </div>
-                    )}
-                    {audit.citations.length > 0 && (
-                      <div className="citations">
-                        <p className="eyebrow">RETRIEVED METHODOLOGY</p>
-                        {audit.citations.map((d) => (
-                          <a
-                            key={d.id}
-                            href={d.url}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            <BookOpen size={14} />
-                            {d.title}
-                            <ArrowUpRight size={13} />
-                          </a>
-                        ))}
-                      </div>
-                    )}
                   </div>
-                )}
+                  {error && (
+                    <p className="error-box" role="alert">
+                      {error}
+                    </p>
+                  )}
+                  {!audit && !busy && !error && (
+                    <div className="agent-empty">
+                      <FileCheck2 size={26} />
+                      <h3>Your evidence trail starts here.</h3>
+                      <p>
+                        Run an investigation to see findings, sources, and each
+                        tool’s inputs and outputs.
+                      </p>
+                    </div>
+                  )}
+                  {busy && (
+                    <output className="small-muted">
+                      Querying the loaded snapshot and checking evidence…
+                    </output>
+                  )}
+                </div>
+                {audit && <AuditResults audit={audit} replay={replay} />}
                 <div className="agent-footer">
                   <ShieldCheck size={16} />
                   <p>
@@ -777,7 +809,14 @@ export default function Workspace({ data }: { data: Dataset }) {
                           key={k}
                           className={k === 'score' ? 'score-cell' : ''}
                         >
-                          {pct(t.metrics[k])}
+                          {t.metrics[k] === null
+                            ? 'Unknown reference'
+                            : pct(t.metrics[k])}
+                          {k === 'score' && (
+                            <small className="availability">
+                              {t.metrics.defined} of 3 components available
+                            </small>
+                          )}
                         </TableCell>
                       ),
                     )}
@@ -824,6 +863,9 @@ export default function Workspace({ data }: { data: Dataset }) {
         </TabsContent>
         <TabsContent value="architecture">
           <Architecture />
+        </TabsContent>
+        <TabsContent value="evaluations">
+          <EvaluationPanel />
         </TabsContent>
         <TabsContent value="methodology">
           <section className="methodology-grid">
@@ -954,39 +996,39 @@ function Architecture() {
   const steps = [
     {
       icon: MapPinned,
-      label: 'Analyst question',
+      label: 'Question and evidence contract',
       tag: 'INPUT',
-      text: 'Ask to rank gaps, compare groups, or inspect a tract.',
-    },
-    {
-      icon: GitBranch,
-      label: 'Bounded orchestrator',
-      tag: 'DECIDE',
-      text: 'Guided tool sequence by default. An optional local model selects follow-up tools.',
+      text: 'Recognize supported requests and list the evidence each part needs. Unsupported requests are declined.',
     },
     {
       icon: BookOpen,
-      label: 'Methodology retrieval',
-      tag: 'KNOW',
-      text: 'Search versioned definitions, formulas, and limitations. Return source citations.',
+      label: 'Required retrieval and validation',
+      tag: 'PREFLIGHT',
+      text: 'Retrieve methodology and validate the snapshot before asking the model to choose an analytical tool.',
+    },
+    {
+      icon: GitBranch,
+      label: 'Model selects analytical tools',
+      tag: 'DECIDE',
+      text: 'The local model chooses ranking, comparison, and inspection calls within six model turns and eight total tools.',
     },
     {
       icon: Braces,
-      label: 'Numerical tools',
-      tag: 'DO',
-      text: 'Query the snapshot, recompute gaps, rank tracts, and compare groups.',
+      label: 'Execute and return feedback',
+      tag: 'TOOL LOOP',
+      text: 'Strict schemas reject invalid arguments. Tool evidence or the error returns to the model for its next decision.',
     },
     {
       icon: ShieldCheck,
-      label: 'Validation gate',
-      tag: 'CHECK',
-      text: 'Check ID membership, finite observations, score bounds, and missing references.',
+      label: 'Check requested evidence',
+      tag: 'COMPLETE OR RETRY',
+      text: 'Verify metric, group, and tract requirements. A premature stop receives one completion retry within the original budget; missing evidence stays Partial.',
     },
     {
       icon: FileCheck2,
-      label: 'Evidence & review',
+      label: 'Findings and human review',
       tag: 'OUTPUT',
-      text: 'Show traceable findings. A human reviews the audit and chooses whether to export.',
+      text: 'Render numerical findings from tool outputs. Preserve partial results, missing references, and the trace in the report.',
     },
   ];
   return (
@@ -1015,6 +1057,21 @@ function Architecture() {
             )}
           </article>
         ))}
+      </div>
+      <div className="architecture-feedback">
+        <strong>Feedback paths</strong>
+        <p>
+          Rejected arguments → schema error → model chooses a corrected call.
+        </p>
+        <p>
+          Missing requested evidence → one completion reminder → model chooses a
+          follow-up → recheck.
+        </p>
+        <p>
+          Time, turn, or tool limit → preserve collected evidence and mark
+          Partial. Guided mode executes a fixed workflow and is labeled
+          separately.
+        </p>
       </div>
       <div className="architecture-details">
         <section className="panel document-panel">
