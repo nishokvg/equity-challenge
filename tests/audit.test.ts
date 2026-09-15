@@ -84,8 +84,7 @@ void test('inconsistent score is detected independently of valid bounds', () => 
   const d = fixture();
   d.tracts[0].metrics.score = 0.2;
   assert.equal(
-    validateDataset(d).find((v) => v.name === 'Independent recomputation')
-      ?.pass,
+    validateDataset(d).find((v) => v.name === 'Formula consistency')?.pass,
     false,
   );
   assert.throws(() => regionalCSV(d));

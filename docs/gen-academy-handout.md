@@ -34,9 +34,9 @@ An optional local model uses an OpenAI-compatible tool-calling endpoint. Guided 
 
 ## Q3. Autonomy and evals
 
-Fixed steps own data preparation, formulas, validation and export integrity. The local model can choose among approved read-only tools and request follow-up evidence within eight tool calls and one minute. It cannot execute arbitrary code, change map data, send messages or submit to the competition.
+Fixed steps own data preparation, formulas, validation and export integrity. The local model can choose among approved read-only tools and request follow-up evidence within eight total tool calls (two mandatory checks and up to six model-selected calls) and one minute. It cannot execute arbitrary code, change map data, send messages or submit to the competition.
 
-We evaluate numerical correctness, source grounding, and failure handling. The application checks sample membership, text GEOIDs, finite observations, bounds, independent Python/TypeScript recomputation and undefined references. Tests also reject unknown tools and invalid arguments, handle unknown group membership and unsupported questions, and prevent model prose from becoming fabricated numeric claims.
+We evaluate numerical correctness, source grounding, and failure handling. The application checks sample membership, text GEOIDs, finite observations, bounds, Python/TypeScript formula consistency using the same aggregated counts and undefined references. Tests also reject unknown tools and invalid arguments, handle unknown group membership and unsupported questions, and prevent model prose from becoming fabricated numeric claims.
 
 A good result answers the question with traceable observations, clear group definitions and explicit limitations. A bad result invents data, mistakes unknown references for zero gap, misstates the comparison population, or claims causation from association. Our demo includes a real missing-reference case to illustrate the distinction.
 

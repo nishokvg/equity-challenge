@@ -8,7 +8,7 @@ export type EvalRow = {
   question: string;
   result: AuditResult;
 };
-type Call = [string, Record<string, unknown>];
+type Call = [string, Record<string, unknown> | string];
 export function scriptedModel(sequence: Call[][]): typeof fetch {
   let turn = 0;
   return async () =>
@@ -21,7 +21,11 @@ export function scriptedModel(sequence: Call[][]): typeof fetch {
             tool_calls: (sequence[turn++] ?? []).map(([name, args], i) => ({
               id: `t${turn}-${i}`,
               type: 'function',
-              function: { name, arguments: JSON.stringify(args) },
+              function: {
+                name,
+                arguments:
+                  typeof args === 'string' ? args : JSON.stringify(args),
+              },
             })),
           },
         },
@@ -88,6 +92,31 @@ export async function evaluateAdapter(data: Dataset): Promise<EvalRow[]> {
       check: (r) =>
         r.status === 'complete' &&
         r.trace.filter((t) => t.error).length === 1 &&
+        r.summary.filter((s) => s.includes('Ratio:')).length === 1,
+    },
+    {
+      name: 'Malformed JSON recovery',
+      question: 'Compare rural and urban tracts',
+      expected:
+        'Preserve malformed argument text exactly, reject it, and accept a corrected call.',
+      sequence: [
+        [
+          [
+            'compare_groups',
+            '{\n  "dimension": "rural", "metric": <invalid>\n}',
+          ],
+        ],
+        [comparison],
+        [],
+      ],
+      check: (r) =>
+        r.status === 'complete' &&
+        r.trace.some(
+          (t) =>
+            !!t.error &&
+            t.rawArguments ===
+              '{\n  "dimension": "rural", "metric": <invalid>\n}',
+        ) &&
         r.summary.filter((s) => s.includes('Ratio:')).length === 1,
     },
     {

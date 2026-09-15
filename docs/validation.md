@@ -3,7 +3,7 @@
 Checked September 12, 2026 PT.
 
 - 591/591 authoritative Northern California sample IDs are present exactly once.
-- Independent TypeScript recomputation agrees with Python for all component and composite scores within 1e-9.
+- Formula consistency: TypeScript agrees with Python for all component and composite scores within 1e-9 using the same aggregated counts; this does not validate geographic counting.
 - 218 tracts have undefined road gaps because their named-highway reference is zero.
 - Baseline regional mean composite gap: 0.06554476793861636 (about 6.6%).
 - The documented RUCA grouping yields 156 rural and 435 urban tracts, no unknown memberships. Mean composite gaps are about 12.1% versus 4.6%, respectively (ratio about 2.64).
@@ -28,3 +28,15 @@ The completion verifier checks supported request requirements against successful
 The dated evaluation batch records 8/8 controlled adapter cases passing and 3/4 local request expectations met. Of the three requests that invoked Ollama, comparison and missing-reference investigation completed; ranking plus inspection remained partial after a rejected tract ID and one completion reminder. The fourth request was unsupported and correctly declined before inference. These results are recorded in data/agent-evaluations.json. A separate browser run reproduced the partial compound result with the correct missing tract identified.
 
 Twenty-four automated tests pass, including replay output recomputation and source/snapshot consistency. Type checking, lint, and production build pass. The browser verified presentation mode, replay labeling, model/required tool labels, partial score labels, the controlled recovery trace, and corrected architecture feedback paths. The replay is an actual dated local-model comparison, independently re-executed against the same snapshot before saving. No scoring formulas or raw source data changed.
+
+## Council recommendations verified September 15, 2026
+
+Raw model argument strings are retained before JSON parsing and included in the trace, rejected/corrected call comparison, and audit export. A controlled malformed JSON case preserves the exact string and line breaks while rejecting it, then accepts the corrected call. The UI explicitly labels this as a test fixture.
+
+The architecture and handout state eight total calls: two mandatory checks and up to six model-selected calls. The numerical validation is named Formula consistency and explicitly limits its claim to shared aggregated counts. Dedicated missing-reference checks now cover facilities, establishments, and combined places as well as roads and buildings. Scoring formulas and source observations are unchanged.
+
+Twenty-nine automated tests pass, including five new regression tests. All nine controlled agent cases pass. In the refreshed local llama3.1:8b batch, three of four expectations passed: comparison and missing-reference investigation completed, and the unsupported request was declined before inference. Ranking plus inspection remained Partial after two rejected calls and one completion reminder; the missing inspection is not represented as complete. The saved comparison replay and evaluation provenance were refreshed for the current agent, numerical tools, retrieval, completion checker, and evaluation source.
+
+Type checking and lint pass. A production build passed under a macOS sandbox denying outbound networking, using the already installed dependencies. Geist Sans and Mono variable WOFF2 fonts are bundled with their upstream OFL license and pinned source/hash provenance; application builds and font rendering no longer fetch Google Fonts. Browser checks verified malformed/corrected argument visibility, validation scope, tool budget wording, and typography.
+
+The existing GitHub repository remains public. These code fixes do not undo prior scoring-code exposure or change repository visibility.

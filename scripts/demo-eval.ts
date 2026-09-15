@@ -12,7 +12,7 @@ const data = JSON.parse(raw) as Dataset;
 const snapshotHash = createHash('sha256').update(raw).digest('hex');
 const sourceHash = createHash('sha256')
   .update(
-    ['agent.ts', 'completion.ts', 'evaluations.ts']
+    ['agent.ts', 'audit.ts', 'knowledge.ts', 'completion.ts', 'evaluations.ts']
       .map((f) => readFileSync(new URL('../lib/' + f, import.meta.url), 'utf8'))
       .join('\n'),
   )

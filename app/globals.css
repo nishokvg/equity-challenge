@@ -2,6 +2,25 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
+@font-face {
+  font-family: 'Geist Bundled';
+  src: url('/fonts/geist-sans-variable.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Mono Bundled';
+  src: url('/fonts/geist-mono-variable.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+:root {
+  --font-geist-sans: 'Geist Bundled';
+  --font-geist-mono: 'Geist Mono Bundled';
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

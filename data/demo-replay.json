@@ -1,9 +1,9 @@
 {
   "label": "Recorded local model run",
-  "recordedAt": "2026-09-15T19:20:27.006Z",
+  "recordedAt": "2026-09-15T19:37:39.960Z",
   "model": "llama3.1:8b",
   "snapshotHash": "1156628701976232d06af1b10c62e6025710f51c27dfbe4ca0706de9325908c6",
-  "sourceHash": "67a485c1419df70ae402f4e077fa998eff6cf8c46350d04e34d700be6daab20d",
+  "sourceHash": "91bcf7e0fbefa133e618ab83c03b3b9f4ee347753ffebd21ab6f8f50a956493b",
   "verification": "Every successful tool output was independently re-executed against this snapshot and matched.",
   "result": {
     "mode": "model",
@@ -20,7 +20,7 @@
         }
       ]
     },
-    "recordedAt": "2026-09-15T19:20:27.006Z",
+    "recordedAt": "2026-09-15T19:37:39.960Z",
     "question": "Compare rural and urban tracts",
     "summary": [
       "6/6 validation checks pass. 218 tracts have no named-highway reference.",
@@ -55,7 +55,7 @@
             "relevance": 3
           }
         ],
-        "elapsedMs": 0,
+        "elapsedMs": 19,
         "automatic": true
       },
       {
@@ -84,14 +84,14 @@
               "detail": "Defined gaps are between 0 and 1; every scored tract has a composite."
             },
             {
-              "name": "Independent recomputation",
+              "name": "Formula consistency",
               "pass": true,
-              "detail": "Browser/TypeScript calculations match the Python snapshot within 1e-9."
+              "detail": "TypeScript matches Python formulas using the same aggregated counts within 1e-9. This does not validate the geographic counting process."
             },
             {
               "name": "Missing reference handling",
               "pass": true,
-              "detail": "Missing references remain undefined and are excluded from the composite."
+              "detail": "Roads, buildings, facilities, establishments, and places remain undefined exactly when their reference inputs are unavailable; missing components are excluded from averages."
             }
           ],
           "missingRoadReference": 218,
@@ -101,7 +101,7 @@
             "06007000404"
           ]
         },
-        "elapsedMs": 3,
+        "elapsedMs": 69,
         "automatic": true
       },
       {
@@ -110,6 +110,7 @@
           "dimension": "rural",
           "metric": "score"
         },
+        "rawArguments": "{\"dimension\":\"rural\",\"metric\":\"score\"}",
         "output": {
           "metric": "score",
           "left": {
@@ -130,7 +131,7 @@
           "unknown": 0,
           "smallGroup": false
         },
-        "elapsedMs": 1
+        "elapsedMs": 9
       }
     ],
     "citations": [

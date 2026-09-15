@@ -1,0 +1,21 @@
+{
+  "repository": "https://github.com/vercel/geist-font",
+  "revision": "10dc7658f13c38a474cde201bb09a4617267545b",
+  "files": [
+    {
+      "file": "geist-sans-variable.woff2",
+      "url": "https://raw.githubusercontent.com/vercel/geist-font/10dc7658f13c38a474cde201bb09a4617267545b/packages/next/dist/fonts/geist-sans/Geist-Variable.woff2",
+      "sha256": "2ffebe993e969069a9789d15164b7715d42491b5835516c5e3b935d5f81b05f1"
+    },
+    {
+      "file": "geist-mono-variable.woff2",
+      "url": "https://raw.githubusercontent.com/vercel/geist-font/10dc7658f13c38a474cde201bb09a4617267545b/packages/next/dist/fonts/geist-mono/GeistMono-Variable.woff2",
+      "sha256": "afaacc4c5fbba89d2ebf7a02dc4070208540874592a5504d57175782fe893101"
+    },
+    {
+      "file": "OFL.txt",
+      "url": "https://raw.githubusercontent.com/vercel/geist-font/10dc7658f13c38a474cde201bb09a4617267545b/OFL.txt",
+      "sha256": "c683bfbcc7e087f5d37a54ef628f10387c451a83ddc459b151403a164ac46c90"
+    }
+  ]
+}

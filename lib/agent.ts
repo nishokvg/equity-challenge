@@ -19,6 +19,8 @@ import {
 export type Trace = {
   tool: string;
   input: Record<string, unknown>;
+  /** Exact model-supplied JSON text, including malformed arguments. */
+  rawArguments?: string;
   output: unknown;
   elapsedMs: number;
   error?: string;
@@ -493,6 +495,7 @@ export async function modelAudit(
         trace.push({
           tool: c.function.name,
           input,
+          rawArguments: c.function.arguments,
           output,
           elapsedMs: Math.round(performance.now() - start),
           ...(error ? { error } : {}),

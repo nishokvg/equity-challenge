@@ -136,14 +136,20 @@ export function AuditResults({
                       `Corrected in call ${correctedAt + 1}.`}{' '}
                     <span>{t.elapsedMs} ms tool execution</span>
                   </p>
-                  <code className="trace-input">{JSON.stringify(t.input)}</code>
+                  {t.rawArguments !== undefined && (
+                    <p className="small-muted">Raw model arguments</p>
+                  )}
+                  <code className="trace-input">
+                    {t.rawArguments ?? JSON.stringify(t.input)}
+                  </code>
                   {t.error && correctedAt >= 0 && (
                     <div className="recovery-pair">
                       <span>Rejected input</span>
-                      <code>{JSON.stringify(t.input)}</code>
+                      <code>{t.rawArguments ?? JSON.stringify(t.input)}</code>
                       <span>Corrected input</span>
                       <code>
-                        {JSON.stringify(audit.trace[correctedAt].input)}
+                        {audit.trace[correctedAt].rawArguments ??
+                          JSON.stringify(audit.trace[correctedAt].input)}
                       </code>
                     </div>
                   )}

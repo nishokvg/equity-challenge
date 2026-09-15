@@ -214,7 +214,7 @@ export default function Workspace({ data }: { data: Dataset }) {
             '## Tool trace',
             ...audit.trace.map(
               (t) =>
-                `- ${t.tool}: ${JSON.stringify(t.input)} → ${JSON.stringify(t.output)}`,
+                `- ${t.tool}: ${JSON.stringify({ input: t.input, ...(t.rawArguments !== undefined ? { rawArguments: t.rawArguments } : {}), output: t.output })}`,
             ),
           ]
         : [
@@ -1010,7 +1010,7 @@ function Architecture() {
       icon: GitBranch,
       label: 'Model selects analytical tools',
       tag: 'DECIDE',
-      text: 'The local model chooses ranking, comparison, and inspection calls within six model turns and eight total tools.',
+      text: 'Eight tool calls total: two mandatory checks and up to six model-selected calls, within six model turns.',
     },
     {
       icon: Braces,
@@ -1095,9 +1095,11 @@ function Architecture() {
           <p className="eyebrow">AUTONOMY BOUNDARY</p>
           <h3>Decisions you can inspect</h3>
           <p>
-            The optional model has at most eight read-only tool calls and a
-            one-minute budget. Unknown tools and invalid arguments are rejected.
-            Numerical summaries are rendered from tool outputs.
+            Each investigation allows eight tool calls total: two mandatory
+            checks and up to six model-selected calls within one minute.
+            Rejected calls count toward that budget. Unknown tools and invalid
+            arguments are rejected. Numerical summaries are rendered from tool
+            outputs.
           </p>
           <p>
             There is no automatic map editing, publishing, emergency dispatch,

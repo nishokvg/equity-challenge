@@ -33,7 +33,13 @@ void test('saved model replay matches its snapshot and every successful tool out
 void test('evaluation artifact and replay record the current evaluator source', () => {
   const hash = createHash('sha256')
     .update(
-      ['agent.ts', 'completion.ts', 'evaluations.ts']
+      [
+        'agent.ts',
+        'audit.ts',
+        'knowledge.ts',
+        'completion.ts',
+        'evaluations.ts',
+      ]
         .map((f) =>
           readFileSync(new URL('../lib/' + f, import.meta.url), 'utf8'),
         )

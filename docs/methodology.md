@@ -36,4 +36,4 @@ Differences are descriptive associations. Geography, reference vintages, road-cl
 
 ## Validation
 
-Python calculates the snapshot; TypeScript independently recomputes all component and composite gaps to tolerance 1e-9. Further checks cover membership, uniqueness, valid observations, bounds, and undefined roads/buildings. Unit tests exercise missing facilities/establishments too. These checks establish internal consistency, not leaderboard accuracy. RMSE requires organizer evaluation and has not been obtained.
+Formula consistency: TypeScript recalculates all component and composite gaps from the same aggregated counts used by Python, to tolerance 1e-9. This does not independently validate spatial joins, clipping, or the counting of geographic features. Further checks cover membership, uniqueness, valid observations, bounds, and undefined roads, buildings, facilities, establishments, and places. Unit tests exercise missing facilities/establishments too. These checks establish internal consistency, not leaderboard accuracy. RMSE requires organizer evaluation and has not been obtained.

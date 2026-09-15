@@ -202,10 +202,10 @@ export function validateDataset(data: Dataset): Validation[] {
         'Defined gaps are between 0 and 1; every scored tract has a composite.',
     },
     {
-      name: 'Independent recomputation',
+      name: 'Formula consistency',
       pass: matched,
       detail:
-        'Browser/TypeScript calculations match the Python snapshot within 1e-9.',
+        'TypeScript matches Python formulas using the same aggregated counts within 1e-9. This does not validate the geographic counting process.',
     },
     {
       name: 'Missing reference handling',
@@ -214,10 +214,20 @@ export function validateDataset(data: Dataset): Validation[] {
         data.tracts.every(
           (t) =>
             (t.counts.roads[1] === 0) === (t.metrics.roads === null) &&
-            (t.counts.buildings[1] === 0) === (t.metrics.buildings === null),
+            (t.counts.buildings[1] === 0) === (t.metrics.buildings === null) &&
+            ['fire', 'ems', 'schools'].every(
+              (key) => t.counts[key as keyof Counts][1] === 0,
+            ) ===
+              (t.metrics.facilities === null) &&
+            (t.counts.establishments[1] === 0) ===
+              (t.metrics.establishments === null) &&
+            ['fire', 'ems', 'schools', 'establishments'].every(
+              (key) => t.counts[key as keyof Counts][1] === 0,
+            ) ===
+              (t.metrics.places === null),
         ),
       detail:
-        'Missing references remain undefined and are excluded from the composite.',
+        'Roads, buildings, facilities, establishments, and places remain undefined exactly when their reference inputs are unavailable; missing components are excluded from averages.',
     },
   ];
 }

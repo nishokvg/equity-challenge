@@ -77,12 +77,30 @@ export function EvaluationPanel() {
         <summary>Snapshot and evaluation provenance</summary>
         <p>Snapshot SHA-256</p>
         <code>{report.snapshotHash}</code>
-        <p>Agent, completion checker and evaluation source SHA-256</p>
+        <p>
+          Agent, numerical tools, retrieval, completion checker and evaluation
+          source SHA-256
+        </p>
         <code>{report.sourceHash}</code>
         <p>
           Saved results are a dated batch, not tests running in this browser.
           Re-run npm run eval:live after changing the agent or snapshot.
         </p>
+      </details>
+      <details className="controlled-trace">
+        <summary>Inspect the controlled malformed JSON recovery</summary>
+        <p>
+          The malformed JSON is supplied by a test fixture. Raw arguments are
+          retained exactly, including line breaks.
+        </p>
+        <AuditResults
+          audit={
+            report.controlled.find((r) => r.name === 'Malformed JSON recovery')!
+              .result as AuditResult
+          }
+          replay={false}
+          controlled
+        />
       </details>
     </section>
   );
