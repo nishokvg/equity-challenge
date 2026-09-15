@@ -70,6 +70,35 @@ export async function evaluateAdapter(data: Dataset): Promise<EvalRow[]> {
         r.completion?.checks.length === 2,
     },
     {
+      name: 'Biggest building gaps',
+      question: 'Biggest building gaps',
+      expected: 'Recognize biggest as descending ranking of building gaps.',
+      sequence: [
+        [['rank_tracts', { metric: 'buildings', group: 'all', limit: 5 }]],
+        [],
+      ],
+      check: (r) =>
+        r.status === 'complete' &&
+        r.trace.some(
+          (t) =>
+            !t.error &&
+            t.tool === 'rank_tracts' &&
+            t.input.metric === 'buildings',
+        ),
+    },
+    {
+      name: 'Outside-region tract',
+      question: 'Inspect tract 36061000100',
+      expected:
+        'Explain snapshot scope before model inference or analytical tools.',
+      sequence: [],
+      check: (r) =>
+        r.status === 'unsupported' &&
+        r.trace.length === 0 &&
+        r.completion?.supported === false &&
+        r.summary.some((s) => s.startsWith('Out of scope:')),
+    },
+    {
       name: 'Missing references',
       question: 'Explain missing reference data',
       expected:

@@ -66,20 +66,22 @@ if (process.argv.includes('--live')) {
     'Rank the highest gaps and inspect the top tract',
     'Explain missing reference data',
     'Write a song',
+    'Biggest building gaps',
+    'Inspect tract 36061000100',
   ]) {
     const start = Date.now();
     const result = await modelAudit(data, question, config);
-    const pass =
-      question === 'Write a song'
-        ? result.status === 'unsupported'
-        : result.status === 'complete';
+    const outsideScope =
+      question === 'Write a song' || question === 'Inspect tract 36061000100';
+    const pass = outsideScope
+      ? result.status === 'unsupported'
+      : result.status === 'complete';
     report.live.push({
       name: question,
       question,
-      expected:
-        question === 'Write a song'
-          ? 'Decline without analytical tools.'
-          : 'Collect all evidence requirements.',
+      expected: outsideScope
+        ? 'Decline without analytical tools.'
+        : 'Collect all evidence requirements.',
       observed: `${result.status}; ${result.completion?.checks.filter((c) => c.pass).length ?? 0}/${result.completion?.checks.length ?? 0} evidence requirements; ${result.completionRetries ?? 0} completion retries; ${result.trace.filter((t) => t.error).length} rejected calls.${result.stopReason ? ' ' + result.stopReason : ''}`,
       pass,
       model: config.model,

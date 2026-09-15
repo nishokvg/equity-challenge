@@ -1,4 +1,4 @@
-import type { Component, Group } from './audit.ts';
+import type { Component, Group, Dataset } from './audit.ts';
 import type { Trace } from './agent.ts';
 
 export type Requirement = {
@@ -15,6 +15,23 @@ export type Completion = {
 };
 const scope =
   'Checks cover ranking, rural/urban or SVI comparisons, explicit tract inspection, missing references, and methodology. They do not establish causal explanations.';
+
+function requestedTractIds(question: string): string[] {
+  return [...new Set(question.match(/\b\d{11}\b/g) ?? [])];
+}
+
+/** Validate explicit user IDs against the snapshot, not just the state prefix. */
+export function requestScopeIssue(
+  data: Dataset,
+  question: string,
+): string | undefined {
+  const available = new Set(data.tracts.map((t) => t.geoid));
+  const unavailable = requestedTractIds(question).filter(
+    (id) => !available.has(id),
+  );
+  if (!unavailable.length) return undefined;
+  return `Out of scope: this demo covers only the loaded Northern California snapshot (${data.tracts.length} tracts). Requested tract IDs ${unavailable.join(', ')} are not available in this snapshot. Remove these IDs or choose a tract from the map or evidence table, then run the request again.`;
+}
 
 /** A conservative contract for supported analytical intents, not a general language judge. */
 export function requestRequirements(question: string): Requirement[] {
@@ -40,7 +57,7 @@ export function requestRequirements(question: string): Requirement[] {
   )
     return [];
   const req: Requirement[] = [];
-  const ranking = /rank|largest|highest|\btop\b/.test(q);
+  const ranking = /rank|largest|highest|\bbiggest\b|\btop\b/.test(q);
   const compare =
     /compar|versus|\bvs\b|disparit/.test(q) ||
     (/rural/.test(q) && /urban/.test(q));
@@ -71,7 +88,7 @@ export function requestRequirements(question: string): Requirement[] {
               ? 'urban'
               : 'all';
     const limit = Number(
-      q.match(/(?:top|rank|highest|largest)\s+(\d+)\b/)?.[1] ?? 5,
+      q.match(/(?:top|rank|highest|largest|biggest)\s+(\d+)\b/)?.[1] ?? 5,
     );
     if (limit < 1 || limit > 10) return [];
     req.push({
@@ -81,7 +98,7 @@ export function requestRequirements(question: string): Requirement[] {
       args: { metric, group, limit },
     });
   }
-  const ids = [...new Set(q.match(/\b\d{11}\b/g) ?? [])];
+  const ids = requestedTractIds(q);
   for (const geoid of ids)
     req.push({
       id: 'inspect-' + geoid,

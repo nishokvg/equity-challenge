@@ -14,6 +14,7 @@ import { retrieve } from './knowledge.ts';
 import {
   assessCompletion,
   requestRequirements,
+  requestScopeIssue,
   type Completion,
 } from './completion.ts';
 export type Trace = {
@@ -290,6 +291,8 @@ export function guidedAudit(data: Dataset, question: string): AuditResult {
     });
     return output;
   };
+  const scopeIssue = requestScopeIssue(data, question);
+  if (scopeIssue) return unsupported(question, 'guided', undefined, scopeIssue);
   if (!requestRequirements(question).length)
     return unsupported(question, 'guided');
   call('search_methodology', { query: question + ' coverage gap reference' });
@@ -322,6 +325,7 @@ function unsupported(
   question: string,
   mode: 'guided' | 'model',
   model?: string,
+  scopeIssue?: string,
 ): AuditResult {
   return {
     mode,
@@ -332,9 +336,12 @@ function unsupported(
     citations: [],
     selectedIds: [],
     recordedAt: new Date().toISOString(),
-    completion: assessCompletion(question, []),
+    completion: scopeIssue
+      ? { supported: false, scope: scopeIssue, checks: [] }
+      : assessCompletion(question, []),
     summary: [
-      'This request is outside the checked analytical scope. Ask to rank up to 10 tracts, compare rural/urban or SVI groups, inspect an 11-digit tract ID, or explain missing references.',
+      scopeIssue ??
+        'This request is outside the checked analytical scope. Ask to rank up to 10 tracts, compare rural/urban or SVI groups, inspect an 11-digit tract ID, or explain missing references.',
     ],
   };
 }
@@ -346,6 +353,9 @@ export async function modelAudit(
   config: ModelConfig,
   fetcher: typeof fetch = fetch,
 ): Promise<AuditResult> {
+  const scopeIssue = requestScopeIssue(data, question);
+  if (scopeIssue)
+    return unsupported(question, 'model', config.model, scopeIssue);
   if (!requestRequirements(question).length)
     return unsupported(question, 'model', config.model);
   const trace: Trace[] = [];

@@ -31,17 +31,19 @@ export function AuditResults({
             ? 'Audit complete'
             : audit.status === 'partial'
               ? 'Partial investigation'
-              : 'Question outside scope'}
+              : 'Out of scope'}
         </span>
         <span>
           {audit.trace.length} tool calls ·{' '}
           {controlled
             ? 'Controlled test — no live model'
-            : replay
-              ? 'Recorded replay'
-              : audit.mode === 'model'
-                ? 'Live local model'
-                : 'Guided workflow'}
+            : audit.status === 'unsupported'
+              ? 'Scope check · no model called'
+              : replay
+                ? 'Recorded replay'
+                : audit.mode === 'model'
+                  ? 'Live local model'
+                  : 'Guided workflow'}
         </span>
       </div>
       {audit.model && (

@@ -1,7 +1,7 @@
 {
-  "recordedAt": "2026-09-15T19:37:02.881Z",
+  "recordedAt": "2026-09-15T19:51:32.148Z",
   "snapshotHash": "1156628701976232d06af1b10c62e6025710f51c27dfbe4ca0706de9325908c6",
-  "sourceHash": "91bcf7e0fbefa133e618ab83c03b3b9f4ee347753ffebd21ab6f8f50a956493b",
+  "sourceHash": "95b442cb7e246ae6c13ab3ba050757a77df3ead94190f8259ecbf35c6b95b7b9",
   "controlled": [
     {
       "name": "Group comparison",
@@ -24,7 +24,7 @@
             }
           ]
         },
-        "recordedAt": "2026-09-15T19:37:02.909Z",
+        "recordedAt": "2026-09-15T19:51:32.196Z",
         "question": "Compare rural and urban tracts",
         "summary": [
           "6/6 validation checks pass. 218 tracts have no named-highway reference.",
@@ -105,7 +105,7 @@
                 "06007000404"
               ]
             },
-            "elapsedMs": 2,
+            "elapsedMs": 3,
             "automatic": true
           },
           {
@@ -193,7 +193,7 @@
             }
           ]
         },
-        "recordedAt": "2026-09-15T19:37:02.911Z",
+        "recordedAt": "2026-09-15T19:51:32.202Z",
         "question": "Rank the highest gaps and inspect the top tract",
         "summary": [
           "6/6 validation checks pass. 218 tracts have no named-highway reference.",
@@ -276,7 +276,7 @@
                 "06007000404"
               ]
             },
-            "elapsedMs": 1,
+            "elapsedMs": 3,
             "automatic": true
           },
           {
@@ -415,6 +415,222 @@
       }
     },
     {
+      "name": "Biggest building gaps",
+      "question": "Biggest building gaps",
+      "expected": "Recognize biggest as descending ranking of building gaps.",
+      "observed": "complete; 1/1 evidence requirements; 0 completion retries; 0 rejected calls.",
+      "pass": true,
+      "result": {
+        "mode": "model",
+        "status": "complete",
+        "completion": {
+          "supported": true,
+          "scope": "Checks cover ranking, rural/urban or SVI comparisons, explicit tract inspection, missing references, and methodology. They do not establish causal explanations.",
+          "checks": [
+            {
+              "id": "rank",
+              "label": "Rank the top 5 all tracts by buildings",
+              "pass": true,
+              "detail": "Supported by a successful tool result."
+            }
+          ]
+        },
+        "recordedAt": "2026-09-15T19:51:32.203Z",
+        "question": "Biggest building gaps",
+        "summary": [
+          "6/6 validation checks pass. 218 tracts have no named-highway reference.",
+          "06089010603 has the largest building gap in All tracts: 17.4%. This is a mapping-review candidate, not a confirmed missing service."
+        ],
+        "trace": [
+          {
+            "tool": "search_methodology",
+            "input": {
+              "query": "Biggest building gaps coverage gap reference"
+            },
+            "output": [
+              {
+                "id": "provenance",
+                "title": "Release, provenance, and source limits",
+                "url": "https://zindi.world/competitions/bias-bounty-mapping-equity-challenge/data",
+                "text": "The dataset is pinned to Overture release 2026-08-19.0. GEOID must remain text to retain leading zeros. Inputs use OGC:CRS84 longitude-latitude coordinates. Reference sources can contain errors and different vintages; apparent coverage gaps warrant review and do not prove that physical services are absent.",
+                "relevance": 4
+              },
+              {
+                "id": "scoring",
+                "title": "Coverage gap and undefined references",
+                "url": "https://source.coop/humane-intelligence/bias-bounty-mapping-equity-challenge",
+                "text": "For a defined reference, gap = 1 − min(1, Overture/reference). Zero reference makes a component undefined. Average only defined components for the composite. A missing denominator does not mean complete mapping. Hospitals are excluded from scored facilities.",
+                "relevance": 3
+              },
+              {
+                "id": "buildings",
+                "title": "Buildings and places",
+                "url": "https://source.coop/humane-intelligence/bias-bounty-mapping-equity-challenge",
+                "text": "Building gaps compare Overture footprints with Microsoft structures; ACS housing units are only a sanity check. Facilities compare fire stations, EMS and schools by type. The other places component compares all Overture places with allocated County Business Patterns establishments.",
+                "relevance": 3
+              }
+            ],
+            "elapsedMs": 0,
+            "automatic": true
+          },
+          {
+            "tool": "validate_dataset",
+            "input": {},
+            "output": {
+              "checks": [
+                {
+                  "name": "Tract identity",
+                  "pass": true,
+                  "detail": "591 unique 11-digit text IDs expected."
+                },
+                {
+                  "name": "Submission membership",
+                  "pass": true,
+                  "detail": "Every authoritative regional sample ID is present exactly once."
+                },
+                {
+                  "name": "Valid observations",
+                  "pass": true,
+                  "detail": "Counts and road lengths are finite and non-negative."
+                },
+                {
+                  "name": "Score bounds",
+                  "pass": true,
+                  "detail": "Defined gaps are between 0 and 1; every scored tract has a composite."
+                },
+                {
+                  "name": "Formula consistency",
+                  "pass": true,
+                  "detail": "TypeScript matches Python formulas using the same aggregated counts within 1e-9. This does not validate the geographic counting process."
+                },
+                {
+                  "name": "Missing reference handling",
+                  "pass": true,
+                  "detail": "Roads, buildings, facilities, establishments, and places remain undefined exactly when their reference inputs are unavailable; missing components are excluded from averages."
+                }
+              ],
+              "missingRoadReference": 218,
+              "examples": [
+                "06007000104",
+                "06007000403",
+                "06007000404"
+              ]
+            },
+            "elapsedMs": 1,
+            "automatic": true
+          },
+          {
+            "tool": "rank_tracts",
+            "input": {
+              "metric": "buildings",
+              "group": "all",
+              "limit": 5
+            },
+            "rawArguments": "{\"metric\":\"buildings\",\"group\":\"all\",\"limit\":5}",
+            "output": {
+              "metric": "buildings",
+              "group": "all",
+              "rows": [
+                {
+                  "geoid": "06089010603",
+                  "name": "Census Tract 106.03",
+                  "gap": 0.17356687898089174,
+                  "svi": 0.2173,
+                  "defined": 3
+                },
+                {
+                  "geoid": "06063000501",
+                  "name": "Census Tract 5.01",
+                  "gap": 0.1404011461318052,
+                  "svi": 0.3804,
+                  "defined": 3
+                },
+                {
+                  "geoid": "06063000502",
+                  "name": "Census Tract 5.02",
+                  "gap": 0.1360116166505324,
+                  "svi": 0.4694,
+                  "defined": 3
+                },
+                {
+                  "geoid": "06089012400",
+                  "name": "Census Tract 124",
+                  "gap": 0.1268701376421305,
+                  "svi": 0.4758,
+                  "defined": 3
+                },
+                {
+                  "geoid": "06089012604",
+                  "name": "Census Tract 126.04",
+                  "gap": 0.11183637946040037,
+                  "svi": 0.3512,
+                  "defined": 3
+                }
+              ]
+            },
+            "elapsedMs": 0
+          }
+        ],
+        "citations": [
+          {
+            "id": "provenance",
+            "title": "Release, provenance, and source limits",
+            "url": "https://zindi.world/competitions/bias-bounty-mapping-equity-challenge/data",
+            "text": "The dataset is pinned to Overture release 2026-08-19.0. GEOID must remain text to retain leading zeros. Inputs use OGC:CRS84 longitude-latitude coordinates. Reference sources can contain errors and different vintages; apparent coverage gaps warrant review and do not prove that physical services are absent.",
+            "relevance": 4
+          },
+          {
+            "id": "scoring",
+            "title": "Coverage gap and undefined references",
+            "url": "https://source.coop/humane-intelligence/bias-bounty-mapping-equity-challenge",
+            "text": "For a defined reference, gap = 1 − min(1, Overture/reference). Zero reference makes a component undefined. Average only defined components for the composite. A missing denominator does not mean complete mapping. Hospitals are excluded from scored facilities.",
+            "relevance": 3
+          },
+          {
+            "id": "buildings",
+            "title": "Buildings and places",
+            "url": "https://source.coop/humane-intelligence/bias-bounty-mapping-equity-challenge",
+            "text": "Building gaps compare Overture footprints with Microsoft structures; ACS housing units are only a sanity check. Facilities compare fire stations, EMS and schools by type. The other places component compares all Overture places with allocated County Business Patterns establishments.",
+            "relevance": 3
+          }
+        ],
+        "selectedIds": [
+          "06089010603",
+          "06063000501",
+          "06063000502",
+          "06089012400",
+          "06089012604"
+        ],
+        "model": "controlled fixture",
+        "completionRetries": 0
+      }
+    },
+    {
+      "name": "Outside-region tract",
+      "question": "Inspect tract 36061000100",
+      "expected": "Explain snapshot scope before model inference or analytical tools.",
+      "observed": "unsupported; 0/0 evidence requirements; 0 completion retries; 0 rejected calls.",
+      "pass": true,
+      "result": {
+        "mode": "model",
+        "model": "controlled fixture",
+        "status": "unsupported",
+        "question": "Inspect tract 36061000100",
+        "trace": [],
+        "citations": [],
+        "selectedIds": [],
+        "recordedAt": "2026-09-15T19:51:32.204Z",
+        "completion": {
+          "supported": false,
+          "scope": "Out of scope: this demo covers only the loaded Northern California snapshot (591 tracts). Requested tract IDs 36061000100 are not available in this snapshot. Remove these IDs or choose a tract from the map or evidence table, then run the request again.",
+          "checks": []
+        },
+        "summary": [
+          "Out of scope: this demo covers only the loaded Northern California snapshot (591 tracts). Requested tract IDs 36061000100 are not available in this snapshot. Remove these IDs or choose a tract from the map or evidence table, then run the request again."
+        ]
+      }
+    },
+    {
       "name": "Missing references",
       "question": "Explain missing reference data",
       "expected": "Inspect an actual undefined component without replacing it with zero.",
@@ -435,7 +651,7 @@
             }
           ]
         },
-        "recordedAt": "2026-09-15T19:37:02.914Z",
+        "recordedAt": "2026-09-15T19:51:32.205Z",
         "question": "Explain missing reference data",
         "summary": [
           "6/6 validation checks pass. 218 tracts have no named-highway reference.",
@@ -517,7 +733,7 @@
                 "06007000404"
               ]
             },
-            "elapsedMs": 2,
+            "elapsedMs": 1,
             "automatic": true
           },
           {
@@ -621,7 +837,7 @@
             }
           ]
         },
-        "recordedAt": "2026-09-15T19:37:02.916Z",
+        "recordedAt": "2026-09-15T19:51:32.207Z",
         "question": "Compare rural and urban tracts",
         "summary": [
           "6/6 validation checks pass. 218 tracts have no named-highway reference.",
@@ -816,7 +1032,7 @@
             }
           ]
         },
-        "recordedAt": "2026-09-15T19:37:02.917Z",
+        "recordedAt": "2026-09-15T19:51:32.209Z",
         "question": "Compare rural and urban tracts",
         "summary": [
           "6/6 validation checks pass. 218 tracts have no named-highway reference.",
@@ -1001,7 +1217,7 @@
         "trace": [],
         "citations": [],
         "selectedIds": [],
-        "recordedAt": "2026-09-15T19:37:02.917Z",
+        "recordedAt": "2026-09-15T19:51:32.209Z",
         "completion": {
           "supported": false,
           "scope": "Checks cover ranking, rural/urban or SVI comparisons, explicit tract inspection, missing references, and methodology. They do not establish causal explanations.",
@@ -1039,7 +1255,7 @@
             }
           ]
         },
-        "recordedAt": "2026-09-15T19:37:02.918Z",
+        "recordedAt": "2026-09-15T19:51:32.210Z",
         "question": "Rank the highest gaps and inspect the top tract",
         "summary": [
           "6/6 validation checks pass. 218 tracts have no named-highway reference.",
@@ -1237,7 +1453,7 @@
             }
           ]
         },
-        "recordedAt": "2026-09-15T19:37:02.919Z",
+        "recordedAt": "2026-09-15T19:51:32.212Z",
         "question": "Rank the highest gaps and inspect the top tract",
         "summary": [
           "6/6 validation checks pass. 218 tracts have no named-highway reference.",
@@ -1480,7 +1696,7 @@
             }
           ]
         },
-        "recordedAt": "2026-09-15T19:37:02.920Z",
+        "recordedAt": "2026-09-15T19:51:32.213Z",
         "question": "Compare rural and urban road gaps",
         "summary": [
           "6/6 validation checks pass. 218 tracts have no named-highway reference.",
@@ -1632,8 +1848,8 @@
       "observed": "complete; 1/1 evidence requirements; 0 completion retries; 0 rejected calls.",
       "pass": true,
       "model": "llama3.1:8b",
-      "recordedAt": "2026-09-15T19:37:39.960Z",
-      "elapsedMs": 18471
+      "recordedAt": "2026-09-15T19:51:57.855Z",
+      "elapsedMs": 18099
     },
     {
       "name": "Rank the highest gaps and inspect the top tract",
@@ -1642,8 +1858,8 @@
       "observed": "partial; 1/2 evidence requirements; 1 completion retries; 2 rejected calls. The model stopped before collecting all requested evidence.",
       "pass": false,
       "model": "llama3.1:8b",
-      "recordedAt": "2026-09-15T19:38:13.334Z",
-      "elapsedMs": 33331
+      "recordedAt": "2026-09-15T19:52:30.253Z",
+      "elapsedMs": 32376
     },
     {
       "name": "Explain missing reference data",
@@ -1652,8 +1868,8 @@
       "observed": "complete; 1/1 evidence requirements; 1 completion retries; 0 rejected calls.",
       "pass": true,
       "model": "llama3.1:8b",
-      "recordedAt": "2026-09-15T19:38:35.069Z",
-      "elapsedMs": 21720
+      "recordedAt": "2026-09-15T19:52:47.421Z",
+      "elapsedMs": 17165
     },
     {
       "name": "Write a song",
@@ -1662,7 +1878,27 @@
       "observed": "unsupported; 0/0 evidence requirements; 0 completion retries; 0 rejected calls.",
       "pass": true,
       "model": "llama3.1:8b",
-      "recordedAt": "2026-09-15T19:38:35.073Z",
+      "recordedAt": "2026-09-15T19:52:47.422Z",
+      "elapsedMs": 1
+    },
+    {
+      "name": "Biggest building gaps",
+      "question": "Biggest building gaps",
+      "expected": "Collect all evidence requirements.",
+      "observed": "complete; 1/1 evidence requirements; 0 completion retries; 0 rejected calls.",
+      "pass": true,
+      "model": "llama3.1:8b",
+      "recordedAt": "2026-09-15T19:53:03.203Z",
+      "elapsedMs": 15780
+    },
+    {
+      "name": "Inspect tract 36061000100",
+      "question": "Inspect tract 36061000100",
+      "expected": "Decline without analytical tools.",
+      "observed": "unsupported; 0/0 evidence requirements; 0 completion retries; 0 rejected calls.",
+      "pass": true,
+      "model": "llama3.1:8b",
+      "recordedAt": "2026-09-15T19:53:03.204Z",
       "elapsedMs": 0
     }
   ]

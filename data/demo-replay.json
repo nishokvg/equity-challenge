@@ -1,9 +1,9 @@
 {
   "label": "Recorded local model run",
-  "recordedAt": "2026-09-15T19:37:39.960Z",
+  "recordedAt": "2026-09-15T19:51:57.855Z",
   "model": "llama3.1:8b",
   "snapshotHash": "1156628701976232d06af1b10c62e6025710f51c27dfbe4ca0706de9325908c6",
-  "sourceHash": "91bcf7e0fbefa133e618ab83c03b3b9f4ee347753ffebd21ab6f8f50a956493b",
+  "sourceHash": "95b442cb7e246ae6c13ab3ba050757a77df3ead94190f8259ecbf35c6b95b7b9",
   "verification": "Every successful tool output was independently re-executed against this snapshot and matched.",
   "result": {
     "mode": "model",
@@ -20,7 +20,7 @@
         }
       ]
     },
-    "recordedAt": "2026-09-15T19:37:39.960Z",
+    "recordedAt": "2026-09-15T19:51:57.855Z",
     "question": "Compare rural and urban tracts",
     "summary": [
       "6/6 validation checks pass. 218 tracts have no named-highway reference.",
@@ -55,7 +55,7 @@
             "relevance": 3
           }
         ],
-        "elapsedMs": 19,
+        "elapsedMs": 26,
         "automatic": true
       },
       {
@@ -101,7 +101,7 @@
             "06007000404"
           ]
         },
-        "elapsedMs": 69,
+        "elapsedMs": 636,
         "automatic": true
       },
       {
@@ -131,7 +131,7 @@
           "unknown": 0,
           "smallGroup": false
         },
-        "elapsedMs": 9
+        "elapsedMs": 1
       }
     ],
     "citations": [
