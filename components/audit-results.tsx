@@ -138,12 +138,19 @@ export function AuditResults({
                       `Corrected in call ${correctedAt + 1}.`}{' '}
                     <span>{t.elapsedMs} ms tool execution</span>
                   </p>
-                  {t.rawArguments !== undefined && (
-                    <p className="small-muted">Raw model arguments</p>
+                  <p className="small-muted">
+                    {t.rawArguments !== undefined
+                      ? 'Raw model arguments'
+                      : 'Tool inputs'}
+                  </p>
+                  {t.rawArguments === undefined &&
+                  Object.keys(t.input).length === 0 ? (
+                    <p>No inputs required. This tool checks the loaded snapshot.</p>
+                  ) : (
+                    <code className="trace-input">
+                      {t.rawArguments ?? JSON.stringify(t.input)}
+                    </code>
                   )}
-                  <code className="trace-input">
-                    {t.rawArguments ?? JSON.stringify(t.input)}
-                  </code>
                   {t.error && correctedAt >= 0 && (
                     <div className="recovery-pair">
                       <span>Rejected input</span>
@@ -156,7 +163,7 @@ export function AuditResults({
                     </div>
                   )}
                   <details>
-                    <summary>View returned evidence</summary>
+                    <summary>View returned evidence (tool output)</summary>
                     <pre>{JSON.stringify(t.output, null, 2)}</pre>
                   </details>
                 </div>

@@ -1485,7 +1485,6 @@ summary {
 }
 .presentation .intro,
 .presentation .stats,
-.presentation .tract-table,
 .presentation .agent-intro,
 .presentation .agent-empty {
   display: none;

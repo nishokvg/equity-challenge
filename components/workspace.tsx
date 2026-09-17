@@ -317,6 +317,22 @@ export default function Workspace({ data }: { data: Dataset }) {
           >
             {presentation ? 'Exit presentation' : 'Presentation view'}
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              flushSync(() => {
+                setView('explore');
+                setGroup('all');
+                setQuery('');
+                setPage(0);
+              });
+              const table = document.getElementById('tract-evidence');
+              table?.focus({ preventScroll: true });
+              table?.scrollIntoView({ block: 'start' });
+            }}
+          >
+            View dataset ({data.tracts.length} tracts)
+          </Button>
           <Button variant="outline" disabled={busy} onClick={loadReplay}>
             Load recorded replay
           </Button>
@@ -746,7 +762,12 @@ export default function Workspace({ data }: { data: Dataset }) {
               </div>
             </aside>
           </div>
-          <section className="panel tract-table">
+          <section
+            id="tract-evidence"
+            className="panel tract-table"
+            tabIndex={-1}
+            aria-label="Loaded tract dataset"
+          >
             <div className="panel-heading">
               <div>
                 <p className="eyebrow">FOLLOW THE NUMBERS</p>
